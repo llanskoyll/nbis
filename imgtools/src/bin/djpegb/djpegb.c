@@ -105,8 +105,8 @@ int main(int argc, char *argv[])
       exit(ret);
    }
 
-   if(debug > 1)
-      fprintf(stdout, "Image pixmap constructed\n");
+   /* if(debug > 1)
+         fprintf(stdout, "Image pixmap constructed\n"); */
 
    if((depth == 24) && (!intrlvflag)){
       for(i = 0; i < MAX_CMPNTS; i++){
@@ -170,8 +170,8 @@ int main(int argc, char *argv[])
       exit(ret);
    }
    free(odata);
-   if(debug > 1)
-      fprintf(stdout, "Image pixmap written to %s\n", ofile);
+   /* if(debug > 1)
+       fprintf(stdout, "Image pixmap written to %s\n", ofile);*/
 
    exit(0);
 }

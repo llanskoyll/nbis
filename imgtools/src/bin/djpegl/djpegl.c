@@ -127,8 +127,8 @@ int main(int argc, char *argv[])
       /* Forces depth 8 image to default non-interleaved, makes more sense. */
       intrlvflag = 0;
 
-   if(debug > 1)
-      fprintf(stdout, "Image pixmap constructed\n");
+   /* if(debug > 1)
+       fprintf(stdout, "Image pixmap constructed\n"); */
 
    fileroot(ifile);
    sprintf(ofile, "%s.%s", ifile, NCM_EXT);
@@ -222,8 +222,8 @@ int main(int argc, char *argv[])
    }
    free(odata);
 
-   if(debug > 1)
-      fprintf(stdout, "Image pixmap written to %s\n", ofile);
+   /* if(debug > 1)
+       fprintf(stdout, "Image pixmap written to %s\n", ofile); */
 
    exit(0);
 }

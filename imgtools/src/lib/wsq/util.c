@@ -529,8 +529,6 @@ int quantize(
             }
          }
       }
-      else if(debug > 0)
-         fprintf(stderr, "%d -> %3.6f\n", cnt, quant_vals->qbss[cnt]);
    }
 
    *osip = sip;

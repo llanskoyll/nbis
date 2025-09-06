@@ -168,14 +168,12 @@ int wsq14_decode_file(unsigned char **odata, int *owidth, int *oheight,
    height = frm_header_wsq.height;
    num_pix = width * height;
 
-   if(debug > 0)
-      fprintf(stderr, "SOI_WSQ, tables, and frame header read\n\n");
+   
 
    /* Build WSQ decomposition trees. */
    build_wsq_trees_wsq14(w_tree, W_TREELEN, q_tree, Q_TREELEN, width, height);
 
-   if(debug > 0)
-      fprintf(stderr, "Tables for wavelet decomposition finished\n\n");
+   
 
    /* Allocate working memory. */
    qdata = (short *) malloc(num_pix * sizeof(short));
@@ -193,10 +191,6 @@ int wsq14_decode_file(unsigned char **odata, int *owidth, int *oheight,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr,
-         "Quantized WSQ subband data blocks read and Huffman decoded\n\n");
-
    /* Decode the quantize wavelet subband data. */
    if((ret = unquantize(&fdata, &dqt_table, q_tree, Q_TREELEN,
                          qdata, width, height))){
@@ -205,8 +199,7 @@ int wsq14_decode_file(unsigned char **odata, int *owidth, int *oheight,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "WSQ subband data blocks unquantized\n\n");
+   
 
    /* Done with quantized wavelet subband data. */
    free(qdata);
@@ -218,8 +211,7 @@ int wsq14_decode_file(unsigned char **odata, int *owidth, int *oheight,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "WSQ reconstruction of image finished\n\n");
+   
 
    cdata = (unsigned char *)malloc(num_pix * sizeof(unsigned char));
    if(cdata == (unsigned char *)NULL) {
@@ -239,8 +231,7 @@ int wsq14_decode_file(unsigned char **odata, int *owidth, int *oheight,
    /* Added by MDG on 02-24-05 */
    free_wsq_decoder_resources();
 
-  if(debug > 0)
-      fprintf(stderr, "Doubleing point pixels converted to unsigned char\n\n");
+  
 
 
    /* Assign reconstructed pixmap and attributes to output pointers. */
@@ -310,15 +301,13 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
    height = frm_header_wsq.height;
    num_pix = width * height;
 
-   if(debug > 0)
-      fprintf(stderr, "SOI_WSQ, tables, and frame header read\n\n");
+   
 
    /* Build WSQ decomposition trees. */
    build_shuffle_trees_wsq14(w_tree, W_TREELEN, q_tree, Q_TREELEN,
                             q_tree_wsq14, Q_TREELEN, width, height);
 
-   if(debug > 0)
-      fprintf(stderr, "Tables for wavelet decomposition finished\n\n");
+   
 
    /* Allocate working memory. */
    qdata = (short *) malloc(num_pix * sizeof(short));
@@ -333,10 +322,6 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
       free(qdata);
       return(ret);
    }
-
-   if(debug > 0)
-      fprintf(stderr,
-         "Quantized WSQ subband data blocks read and Huffman decoded\n\n");
 
 /*************************************/
 /* 2. CONVERT OLD FORMATTED DATA ... */
@@ -424,8 +409,7 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "SOI_WSQ, tables, and frame header written\n\n");
+   
 
    /* Allocate a temporary buffer for holding compressed block data.    */
    /* This buffer is allocated to the size of the original input image, */
@@ -465,8 +449,7 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
    free(huffbits);
    free(huffvalues);
 
-   if(debug > 0)
-      fprintf(stderr, "Huffman code Table 1 generated and written\n\n");
+   
 
    /* Compress Block 1 data. */
    if((ret = compress_block(huff_buf, &hsize1, qdata, qsize1,
@@ -499,8 +482,7 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Block 1 compressed and written\n\n");
+   
 
    /******************/
    /* ENCODE Block 2 */
@@ -530,8 +512,7 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
    free(huffbits);
    free(huffvalues);
 
-   if(debug > 0)
-      fprintf(stderr, "Huffman code Table 2 generated and written\n\n");
+   
 
    /* Compress Block 2 data. */
    if((ret = compress_block(huff_buf, &hsize2, qdata+qsize1, qsize2,
@@ -564,8 +545,7 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Block 2 compressed and written\n\n");
+   
 
    /******************/
    /* ENCODE Block 3 */
@@ -602,8 +582,7 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Block 3 compressed and written\n\n");
+   
 
    /* Done with huffman compressing blocks, so done with buffer. */
    free(huff_buf);
@@ -614,12 +593,6 @@ int wsq14_2_wsq(unsigned char **odata, int *olen, FILE *infp)
       return(ret);
    }
 
-   if(debug > 0) {
-      fprintf(stderr,
-              "hsize1 = %d :: hsize2 = %d :: hsize3 = %d\n", hsize1, hsize2, hsize3);
-      fprintf(stderr,"@ complen = %d :: ratio = %.1f\n", hsize,
-                      (float)(num_pix)/(float)hsize);
-   }
 
    *odata = wsq_data;
    *olen = wsq_len;
@@ -687,8 +660,7 @@ static int read_huff_table_wsq14(
    unsigned char table;           /* huffman table indicator */
    unsigned char char_dat;
 
-   if(debug > 0)
-      fprintf(stderr, "Reading huffman table.\n");
+   
 
    bytes_cnt = 0;
    if((ret = read_ushort(&hdr_size, infp)))
@@ -699,9 +671,6 @@ static int read_huff_table_wsq14(
       if((ret = read_byte(&table, infp)))
          return(ret);
 
-      if(debug > 2)
-         fprintf(stderr, "table = %d\n", table);
-
       num_hufvals = 0;
       bytes_cnt += 33;
       for(cnt = 0; cnt < 16; cnt++) {
@@ -711,11 +680,6 @@ static int read_huff_table_wsq14(
          if((ret = read_byte(&char_dat, infp)))
             return(ret);
          (dht_table+table)->huffbits[cnt] = char_dat;
-
-         if(debug > 2)
-            fprintf(stderr,
-                    "huffbits[%d] = %d\n",
-                    cnt, (dht_table+table)->huffbits[cnt]);
 
          num_hufvals += (dht_table+table)->huffbits[cnt];
       }
@@ -736,19 +700,11 @@ static int read_huff_table_wsq14(
             return(ret);
          (dht_table+table)->huffvalues[cnt] = char_dat;
 
-         if(debug > 2)
-            fprintf(stderr,
-                    "huffvalues[%d] = %d\n",
-                    cnt, (dht_table+table)->huffvalues[cnt]);
-
       }
 
       (dht_table+table)->tabdef = 1;
    }
 
-   if(debug > 0)
-      fprintf(stderr,
-              "Finished reading huffman table.\n\n");
 
       return(0);
 }

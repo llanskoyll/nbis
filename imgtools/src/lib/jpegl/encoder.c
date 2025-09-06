@@ -83,20 +83,6 @@ int jpegl_encode_mem(unsigned char **odata, int *olen, IMG_DAT *img_dat,
    unsigned char *outbuf;
    int outlen, outalloc;
 
-   if(debug > 0){
-      fprintf(stdout, "Image Data Structure\n");
-      fprintf(stdout, "w = %d, h = %d, d = %d, ppi = %d\n",
-              img_dat->max_width, img_dat->max_height, img_dat->pix_depth,
-              img_dat->ppi);
-      fprintf(stdout, "intrlv = %d\n\n", img_dat->intrlv);
-      fprintf(stdout, "N = %d\n", img_dat->n_cmpnts);
-      for(i = 0; i < img_dat->n_cmpnts; i++)
-         fprintf(stdout, "H[%d] = %d, V[%d] = %d\n",
-                 i, img_dat->hor_sampfctr[i], i, img_dat->vrt_sampfctr[i]);
-      for(i = 0; i < img_dat->n_cmpnts; i++)
-         fprintf(stdout, "Pt[%d] = %d, p[%d] = %d\n",
-                 i, img_dat->point_trans[i], i, img_dat->predict[i]);
-   }
 
    /* Set output buffer length to size of uncompressed image pixels. */
    outalloc = 0;
@@ -260,11 +246,6 @@ int gen_diff_freqs(IMG_DAT *img_dat, HUF_TABLE **huf_table)
          data_diff++;
       }
 
-      if(debug > 2){
-         for(pixel = 0; pixel < MAX_HUFFCOUNTS_JPEGL+1; pixel++)
-            fprintf(stdout, "freqs[%d] = %d\n", pixel,
-                    huf_table[i]->freq[pixel]);
-      }
    }
 
    return(0);

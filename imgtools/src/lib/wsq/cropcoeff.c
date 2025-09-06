@@ -73,6 +73,7 @@ http://www.mitre.org/work/tech_papers/tech_papers_08/08_0060/index.html
 Q_TREE q_tree2[Q_TREELEN];
 Q_TREE q_tree3[Q_TREELEN];
 
+
 /************************************************************************/
 /* Compute quantized WSQ subband block sizes, using DQT_TABLE input     */
 /* Near duplicate of quant_block_sizes (util.c), but passing a          */
@@ -295,8 +296,7 @@ int wsq_cropcoeff_mem(
        return(ret);
    }
 
-   if(debug > 0)
-     fprintf(stderr, "Cropped coefficients: UL (%d,%d)  %d x %d\n", ulx,uly,  *ow, *oh);
+   
 
    if((ret = wsq_huffcode_mem(wsq_data, olen, 
 		    qdata2, *ow, *oh, 
@@ -361,8 +361,7 @@ int wsq_huffcode_mem(
    putc_ushort(height,wsq_data,huff_pos,&wsq_len);
    putc_ushort(width,wsq_data,huff_pos,&wsq_len);
 
-   if(debug > 0)
-      fprintf(stderr, "SOI, tables, and frame header written\n\n");
+   
 
    /* Compute quantized WSQ subband block sizes */
    quant_block_sizes2(&qsize1, &qsize2, &qsize3, &dqt_table,
@@ -408,8 +407,7 @@ int wsq_huffcode_mem(
    free(huffbits);
    free(huffvalues);
 
-   if(debug > 0)
-      fprintf(stderr, "Huffman code Table 1 generated and written\n\n");
+   
 
    /* Compress Block 1 data. */
    if((ret = compress_block(huff_buf, &hsize1, qdata2, qsize1,
@@ -439,8 +437,7 @@ int wsq_huffcode_mem(
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Block 1 compressed and written\n\n");
+   
 
    /******************/
    /* ENCODE Block 2 */
@@ -468,8 +465,7 @@ int wsq_huffcode_mem(
    free(huffbits);
    free(huffvalues);
 
-   if(debug > 0)
-      fprintf(stderr, "Huffman code Table 2 generated and written\n\n");
+   
 
    /* Compress Block 2 data. */
    if((ret = compress_block(huff_buf, &hsize2, qdata2+qsize1, qsize2,
@@ -499,8 +495,7 @@ int wsq_huffcode_mem(
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Block 2 compressed and written\n\n");
+   
 
    /******************/
    /* ENCODE Block 3 */
@@ -531,8 +526,7 @@ int wsq_huffcode_mem(
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Block 3 compressed and written\n\n");
+   
 
    /* Done with huffman compressing blocks, so done with buffer. */
    free(huff_buf);
@@ -541,14 +535,6 @@ int wsq_huffcode_mem(
    if((ret = putc_ushort(EOI_WSQ, wsq_data, wsq_alloc, &wsq_len))){
       return(ret);
    }
-
-   if(debug > 1) {
-      fprintf(stderr,
-              "hsize1 = %d :: hsize2 = %d :: hsize3 = %d\n", hsize1, hsize2, hsize3);
-   }
-   if(debug > 0)
-      fprintf(stdout,"  \t\tCropped complen = %d :: ratio = %.1f\n",
-              hsize, (float)(num_pix)/(float)hsize);
 
    *olen = wsq_len;
 
@@ -648,14 +634,12 @@ int wsq_dehuff_mem(
    *iw = width;
    *ih = height;
 
-   if(debug > 0)
-      fprintf(stderr, "SOI, tables, and frame header read\n\n");
+   
 
    /* Build WSQ decomposition trees. */
    build_wsq_trees(w_tree, W_TREELEN, q_tree, Q_TREELEN, width, height);
 
-   if(debug > 0)
-      fprintf(stderr, "Tables for wavelet decomposition finished\n\n");
+   
 
    /* The Q-tables and T-tables are not always located prior to the 
       frame header.  We need to find out where they finally appear and
@@ -724,9 +708,6 @@ int wsq_dehuff_mem(
    /* Compute original huffman coded length */
    ihsize -= ebufptr-cbufptr;
 
-   if(debug > 0)
-      fprintf(stderr,
-	     "Quantized WSQ subband data blocks read and Huffman decoded\n\n");
 
    *pqdata = qdata;
 

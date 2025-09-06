@@ -94,14 +94,14 @@ int read_huffman_table(unsigned char *otable_id, unsigned char **ohuffbits,
                        unsigned char **ohuffvalues, const int max_huffcounts,
                        FILE *infp, const int read_table_len, int *bytes_left)
 {
+   int debug = -1;
    int ret, i;
    unsigned short table_len;
    unsigned char table_id;
    unsigned char *huffbits, *huffvalues;
    unsigned short num_hufvals;
 
-   if(debug > 0)
-      fprintf(stdout, "Start reading huffman table.\n");
+   
 
    /* table_len */
    if(read_table_len){
@@ -169,17 +169,16 @@ int read_huffman_table(unsigned char *otable_id, unsigned char **ohuffbits,
    }
    (*bytes_left) -= num_hufvals;
 
-   if(debug > 1){
-      fprintf(stdout, "Table Len = %d\n", table_len);
-      fprintf(stdout, "Table ID = %d\n", table_id);
-      for(i = 0; i < MAX_HUFFBITS; i++)
-         fprintf(stdout, "bits[%d] = %d\n", i, huffbits[i]);
-      for(i = 0; i < num_hufvals; i++)
-         fprintf(stdout, "values[%d] = %d\n", i, huffvalues[i]);
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Table Len = %d\n", table_len);
+       fprintf(stdout, "Table ID = %d\n", table_id);
+       for(i = 0; i < MAX_HUFFBITS; i++)
+          fprintf(stdout, "bits[%d] = %d\n", i, huffbits[i]);
+       for(i = 0; i < num_hufvals; i++)
+          fprintf(stdout, "values[%d] = %d\n", i, huffvalues[i]);
+    } */
    
-   if(debug > 0)
-      fprintf(stdout, "Finished reading huffman table.\n");
+   
 
    *otable_id = table_id;
    *ohuffbits = huffbits;
@@ -191,19 +190,20 @@ int read_huffman_table(unsigned char *otable_id, unsigned char **ohuffbits,
 /*****************************************************/
 /* Reads huffman table from compressed memory buffer */
 /*****************************************************/
+
 int getc_huffman_table(unsigned char *otable_id, unsigned char **ohuffbits,
                        unsigned char **ohuffvalues, const int max_huffcounts,
                        unsigned char **cbufptr, unsigned char *ebufptr,
                        const int read_table_len, int *bytes_left)
 {
+   int debug = -1;
    int ret, i;
    unsigned short table_len;
    unsigned char table_id;
    unsigned char *huffbits, *huffvalues;
    unsigned short num_hufvals;
 
-   if(debug > 0)
-      fprintf(stdout, "Start reading huffman table.\n");
+   
 
    /* table_len */
    if(read_table_len){
@@ -271,17 +271,16 @@ int getc_huffman_table(unsigned char *otable_id, unsigned char **ohuffbits,
    }
    (*bytes_left) -= num_hufvals;
 
-   if(debug > 1){
-      fprintf(stdout, "Table Len = %d\n", table_len);
-      fprintf(stdout, "Table ID = %d\n", table_id);
-      for(i = 0; i < MAX_HUFFBITS; i++)
-         fprintf(stdout, "bits[%d] = %d\n", i, huffbits[i]);
-      for(i = 0; i < num_hufvals; i++)
-         fprintf(stdout, "values[%d] = %d\n", i, huffvalues[i]);
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Table Len = %d\n", table_len);
+       fprintf(stdout, "Table ID = %d\n", table_id);
+       for(i = 0; i < MAX_HUFFBITS; i++)
+          fprintf(stdout, "bits[%d] = %d\n", i, huffbits[i]);
+       for(i = 0; i < num_hufvals; i++)
+          fprintf(stdout, "values[%d] = %d\n", i, huffvalues[i]);
+    } */
    
-   if(debug > 0)
-      fprintf(stdout, "Finished reading huffman table.\n");
+   
 
    *otable_id = table_id;
    *ohuffbits = huffbits;
@@ -300,11 +299,11 @@ int write_huffman_table(
    unsigned char *huffvalues,
    FILE  *outfp)         /* output file              */
 {
+   int debug = -1;
    int i, ret;
    unsigned short table_len, values_offset;
 
-   if(debug > 0)
-      fprintf(stdout, "Start writing huffman table.\n");
+   
 
    /* DHT */
    if((ret = write_ushort(marker, outfp)))
@@ -315,14 +314,14 @@ int write_huffman_table(
    for(i = 0; i < MAX_HUFFBITS; i++)
       table_len += huffbits[i];   /* values size */
 
-   if(debug > 1){
-      fprintf(stdout, "Table Len = %d\n", table_len);
-      fprintf(stdout, "Table ID = %d\n", table_id);
-      for(i = 0; i < MAX_HUFFBITS; i++)
-         fprintf(stdout, "bits[%d] = %d\n", i, huffbits[i]);
-      for(i = 0; i < table_len-values_offset; i++)
-         fprintf(stdout, "values[%d] = %d\n", i, huffvalues[i]);
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Table Len = %d\n", table_len);
+       fprintf(stdout, "Table ID = %d\n", table_id);
+       for(i = 0; i < MAX_HUFFBITS; i++)
+          fprintf(stdout, "bits[%d] = %d\n", i, huffbits[i]);
+       for(i = 0; i < table_len-values_offset; i++)
+          fprintf(stdout, "values[%d] = %d\n", i, huffvalues[i]);
+    } */
    
    /* Table Len */
    if((ret = write_ushort(table_len, outfp)))
@@ -344,8 +343,7 @@ int write_huffman_table(
          return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Finished writing huffman table.\n\n");
+   
 
    return(0);
 }
@@ -362,11 +360,11 @@ int putc_huffman_table(
    const int outalloc,   /* allocated size of buffer */
    int   *outlen)        /* filled length of buffer  */
 {
+   int debug = -1;
    int i, ret;
    unsigned short table_len, values_offset;
 
-   if(debug > 0)
-      fprintf(stdout, "Start writing huffman table.\n");
+   
 
    /* DHT */
    if((ret = putc_ushort(marker, outbuf, outalloc, outlen)))
@@ -377,14 +375,14 @@ int putc_huffman_table(
    for(i = 0; i < MAX_HUFFBITS; i++)
       table_len += huffbits[i];   /* values size */
 
-   if(debug > 1){
-      fprintf(stdout, "Table Len = %d\n", table_len);
-      fprintf(stdout, "Table ID = %d\n", table_id);
-      for(i = 0; i < MAX_HUFFBITS; i++)
-         fprintf(stdout, "bits[%d] = %d\n", i, huffbits[i]);
-      for(i = 0; i < table_len-values_offset; i++)
-         fprintf(stdout, "values[%d] = %d\n", i, huffvalues[i]);
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Table Len = %d\n", table_len);
+       fprintf(stdout, "Table ID = %d\n", table_id);
+       for(i = 0; i < MAX_HUFFBITS; i++)
+          fprintf(stdout, "bits[%d] = %d\n", i, huffbits[i]);
+       for(i = 0; i < table_len-values_offset; i++)
+          fprintf(stdout, "values[%d] = %d\n", i, huffvalues[i]);
+    } */
 
    /* Table Len */
    if((ret = putc_ushort(table_len, outbuf, outalloc, outlen)))
@@ -406,8 +404,7 @@ int putc_huffman_table(
          return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Finished writing huffman table.\n\n");
+   
 
    return(0);
 }
@@ -424,7 +421,7 @@ int find_huff_sizes(int **ocodesize, int *freq, const int max_huffcounts)
 			  difference category*/
    int i;               /*increment variable*/
 
-
+   int debug = -1;
    codesize = (int *)calloc(max_huffcounts+1, sizeof(int));
    if(codesize == (int *)NULL){
       fprintf(stderr, "ERROR : find_huff_sizes : calloc : codesize\n");
@@ -445,10 +442,6 @@ int find_huff_sizes(int **ocodesize, int *freq, const int max_huffcounts)
 
       if(value2 == -1) {
 	 free(others);
-	 if(debug > 2){
-	    for (i = 0; i <= max_huffcounts; i++) 
-	       fprintf(stdout, "codesize[%d] = %d\n", i, codesize[i]);
-	 }
          break;
       }
 
@@ -531,7 +524,7 @@ int find_num_huff_sizes(unsigned char **obits, int *adjust, int *codesize,
    int i;          /*increment variable*/
 
    *adjust = 0;
-
+   int debug = -1;
    /* Allocate 2X desired number of bits due to possible codesize. */
    bits = (unsigned char *)calloc((MAX_HUFFBITS<<1), sizeof(unsigned char));
    if(bits == (unsigned char *)NULL){
@@ -546,11 +539,6 @@ int find_num_huff_sizes(unsigned char **obits, int *adjust, int *codesize,
             *adjust = 1;
    }
 
-   if(debug > 2){
-      for(i = 0; i < MAX_HUFFBITS<<1; i++)
-	 fprintf(stdout, "bits[%d] = %d\n", i, bits[i]);
-      fprintf(stdout, "ADJUST = %d\n", *adjust);
-   }
 
    *obits = bits;
    return(0);
@@ -561,6 +549,7 @@ int find_num_huff_sizes(unsigned char **obits, int *adjust, int *codesize,
 /****************************************************************/
 int sort_huffbits(unsigned char *bits)
 {
+   int debug = -1;
    int i, j;
    int l1, l2, l3;
    short *tbits;
@@ -610,11 +599,11 @@ int sort_huffbits(unsigned char *bits)
       }
    }
 
-   if(debug > 1){
-      fprintf(stdout, "Huffbits after sorting.\n");
-      for(i = 0; i < MAX_HUFFBITS<<1; i++)
-         fprintf(stdout,"sort_bits[%d] = %d\n", i, bits[i]);
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Huffbits after sorting.\n");
+       for(i = 0; i < MAX_HUFFBITS<<1; i++)
+          fprintf(stdout,"sort_bits[%d] = %d\n", i, bits[i]);
+    } */
 
    return(0);
 }
@@ -625,6 +614,7 @@ int sort_huffbits(unsigned char *bits)
 int sort_code_sizes(unsigned char **ovalues, int *codesize,
          const int max_huffcounts)
 {
+   int debug = -1;
    unsigned char *values;      /*defines order of huffman codelengths in
                          relation to the code sizes*/
    int i, i2 = 0, i3;  /*increment variables*/
@@ -645,10 +635,6 @@ int sort_code_sizes(unsigned char **ovalues, int *codesize,
       }
    }
 
-   if(debug > 2){
-      for(i = 0; i <= max_huffcounts; i++)
-	 fprintf(stdout, "values[%d] = %d\n", i, values[i]);
-   }
 
    *ovalues = values;
    return(0);
@@ -661,6 +647,7 @@ int build_huffcode_table(HUFFCODE **ohuffcode_table,
           HUFFCODE *in_huffcode_table, const int last_size,
           unsigned char *values, const int max_huffcounts)
 {
+   int debug = -1;
    int size;      /*huffman code size variable*/
    HUFFCODE *new_huffcode_table; /*pointer to a huffman code structure*/
 
@@ -676,15 +663,6 @@ int build_huffcode_table(HUFFCODE **ohuffcode_table,
       (new_huffcode_table+values[size])->size = (in_huffcode_table+size)->size;
    }
 
-   if(debug > 3){
-      for(size = 0; size <= max_huffcounts; size++) {
-         fprintf(stdout, "huff_size[%d] = %d\n", size,
-                 new_huffcode_table[size].size);
-         fprintf(stdout, "huff_code[%d] = %d\n", size,
-                 new_huffcode_table[size].code);
-      }
-   }
-
    *ohuffcode_table = new_huffcode_table;
    return(0);
 }
@@ -695,6 +673,7 @@ int build_huffcode_table(HUFFCODE **ohuffcode_table,
 int build_huffsizes(HUFFCODE **ohuffcode_table, int *temp_size,
                     unsigned char *huffbits, const int max_huffcounts)
 {
+   int debug = -1;
    HUFFCODE *huffcode_table;    /*table of huffman codes and sizes*/
    int code_size;               /*code sizes*/
    int number_of_codes = 1;     /*the number codes for a given code size*/
@@ -716,14 +695,6 @@ int build_huffsizes(HUFFCODE **ohuffcode_table, int *temp_size,
       number_of_codes = 1;
    }
    (huffcode_table+(*temp_size))->size = 0;
-
-   if(debug > 2){
-      int ii;
-      fprintf(stderr, "In build_huffsizes:\n");
-      for(ii = 0; ii < max_huffcounts+1; ii++)
-         fprintf(stderr, "hf_sz[%d] = %d\n", ii, huffcode_table[ii].size);
-      fflush(stderr);
-   }
 
    *ohuffcode_table = huffcode_table;
    return(0);
@@ -765,6 +736,7 @@ void build_huffcodes(HUFFCODE *huffcode_table)
 void gen_decode_table(HUFFCODE *huffcode_table,
             int *maxcode, int *mincode, int *valptr, unsigned char *huffbits)
 {
+   int debug = -1;
    int i, i2 = 0;                   /*increment variables*/
 
    for(i = 0; i <= MAX_HUFFBITS; i++) {

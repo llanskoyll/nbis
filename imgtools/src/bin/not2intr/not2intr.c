@@ -111,8 +111,7 @@ int main(int argc, char *argv[])
    if((ret = read_raw_from_filesize(ifile, &idata, &ilen)))
       exit(ret);
 
-   if(debug > 0)
-      fprintf(stdout, "File %s read\n", ifile);
+   
 
 
    if((ret = not2intrlv_mem(&odata, &olen, idata, width, height, depth,
@@ -122,8 +121,7 @@ int main(int argc, char *argv[])
    }
    free(idata);
 
-   if(debug > 0)
-      fprintf(stdout, "Image data converted to interleaved\n");
+   
 
    /* Write interleaved image file. */
    fileroot(ifile);
@@ -158,8 +156,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Image data written to file %s\n", ofile);
+   
 
    free(odata);
 

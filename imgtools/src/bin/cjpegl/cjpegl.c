@@ -124,8 +124,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   if(debug > 0)
-      fprintf(stdout, "File %s read\n", ifile);
+   
 
 
    /* If IHead image file ... */
@@ -180,11 +179,6 @@ int main(int argc, char *argv[])
    }
    free(idata);
 
-   if(debug > 0){
-      fprintf(stdout, "Image structure initialized\n");
-      fflush(stderr);
-   }
-
    if((ret = jpegl_encode_mem(&odata, &olen, img_dat, comment_text))){
       free_IMG_DAT(img_dat, FREE_IMAGE);
       if(comment_text != (char *)NULL)
@@ -196,10 +190,6 @@ int main(int argc, char *argv[])
    if(comment_text != (char *)NULL)
       free(comment_text);
 
-   if(debug > 0)
-      fprintf(stdout, "Image data encoded, compressed byte length = %d\n",
-              olen);
-
    fileroot(ifile);
    sprintf(ofile, "%s.%s", ifile, outext);
 
@@ -208,8 +198,7 @@ int main(int argc, char *argv[])
       exit(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Image data written to file %s\n", ofile);
+   
 
    free(odata);
 

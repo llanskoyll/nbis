@@ -106,8 +106,8 @@ int main(int argc, char **argv)
       exit(ret);
    }
 
-   if(debug > 1)
-      fprintf(stderr, "Image pixmap constructed\n");
+   /* if(debug > 1)
+       fprintf(stderr, "Image pixmap constructed\n"); */
 
    fileroot(ifile);
    sprintf(ofile, "%s.%s", ifile, NCM_EXT);
@@ -164,8 +164,8 @@ int main(int argc, char **argv)
    }
    free(odata);
 
-   if(debug > 1)
-      fprintf(stdout, "Image pixmap written to %s\n", ofile);
+   /* if(debug > 1)
+       fprintf(stdout, "Image pixmap written to %s\n", ofile); */
 
    exit(0);
 }
@@ -202,6 +202,5 @@ void procargs(int argc, char **argv, char **outext, char **ifile, int *rawflag)
       }
    }
 
-   if(debug > 0)
-      fprintf(stdout, "file-> %s\n", *ifile);
+   
 }

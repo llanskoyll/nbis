@@ -92,6 +92,7 @@ of the software.
 int wsq_decode_mem(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
                    int *lossyflag, unsigned char *idata, const int ilen)
 {
+   int debug = -1;
    int ret, i;
    unsigned short marker;         /* WSQ marker */
    int num_pix;                   /* image size and counter */
@@ -150,14 +151,12 @@ int wsq_decode_mem(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "SOI, tables, and frame header read\n\n");
+   
 
    /* Build WSQ decomposition trees. */
    build_wsq_trees(w_tree, W_TREELEN, q_tree, Q_TREELEN, width, height);
 
-   if(debug > 0)
-      fprintf(stderr, "Tables for wavelet decomposition finished\n\n");
+   
 
    /* Allocate working memory. */
    qdata = (short *) malloc(num_pix * sizeof(short));
@@ -174,10 +173,6 @@ int wsq_decode_mem(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr,
-         "Quantized WSQ subband data blocks read and Huffman decoded\n\n");
-
    /* Decode the quantize wavelet subband data. */
    if((ret = unquantize(&fdata, &dqt_table, q_tree, Q_TREELEN,
                          qdata, width, height))){
@@ -186,8 +181,7 @@ int wsq_decode_mem(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "WSQ subband data blocks unquantized\n\n");
+   
 
    /* Done with quantized wavelet subband data. */
    free(qdata);
@@ -199,8 +193,7 @@ int wsq_decode_mem(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "WSQ reconstruction of image finished\n\n");
+   
 
    cdata = (unsigned char *)malloc(num_pix * sizeof(unsigned char));
    if(cdata == (unsigned char *)NULL) {
@@ -220,8 +213,7 @@ int wsq_decode_mem(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
    /* Added by MDG on 02-24-05 */
    free_wsq_decoder_resources();
 
-   if(debug > 0)
-      fprintf(stderr, "Doubleing point pixels converted to unsigned char\n\n");
+   
 
    /* Assign reconstructed pixmap and attributes to output pointers. */
    *odata = cdata;
@@ -242,6 +234,7 @@ int wsq_decode_mem(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
 int wsq_decode_file(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
                     int *lossyflag, FILE *infp)
 {
+   int debug = -1;
    int ret;
    unsigned short marker;         /* WSQ marker */
    int num_pix;                   /* image size and counter */
@@ -289,14 +282,12 @@ int wsq_decode_file(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "SOI, tables, and frame header read\n\n");
+   
 
    /* Build WSQ decomposition trees. */
    build_wsq_trees(w_tree, W_TREELEN, q_tree, Q_TREELEN, width, height);
 
-   if(debug > 0)
-      fprintf(stderr, "Tables for wavelet decomposition finished\n\n");
+   
 
    /* Allocate working memory. */
    qdata = (short *) malloc(num_pix * sizeof(short));
@@ -314,10 +305,6 @@ int wsq_decode_file(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr,
-         "Quantized WSQ subband data blocks read and Huffman decoded\n\n");
-
    /* Decode the quantize wavelet subband data. */
    if((ret = unquantize(&fdata, &dqt_table, q_tree, Q_TREELEN,
                          qdata, width, height))){
@@ -326,8 +313,7 @@ int wsq_decode_file(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "WSQ subband data blocks unquantized\n\n");
+   
 
    /* Done with quantized wavelet subband data. */
    free(qdata);
@@ -339,8 +325,7 @@ int wsq_decode_file(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
       return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "WSQ reconstruction of image finished\n\n");
+   
 
    cdata = (unsigned char *)malloc(num_pix * sizeof(unsigned char));
    if(cdata == (unsigned char *)NULL) {
@@ -360,8 +345,7 @@ int wsq_decode_file(unsigned char **odata, int *ow, int *oh, int *od, int *oppi,
    /* Added by MDG on 02-24-05 */
    free_wsq_decoder_resources();
 
-   if(debug > 0)
-      fprintf(stderr, "Doubleing point pixels converted to unsigned char\n\n");
+   
 
 
    /* Assign reconstructed pixmap and attributes to output pointers. */

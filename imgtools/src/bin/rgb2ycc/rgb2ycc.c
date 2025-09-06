@@ -118,8 +118,7 @@ int main(int argc, char *argv[])
          exit(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "File %s read\n", ifile);
+   
 
    /* If IHead image file ... */
    if(!rawflag){
@@ -152,8 +151,7 @@ int main(int argc, char *argv[])
    }
    free(idata);
 
-   if(debug > 0)
-      fprintf(stdout, "Image data converted to YCbCr\n");
+   
 
    if((ret = downsample_cmpnts(&tdata, &tlen, odata, width, height, depth,
                               hor_sampfctr, vrt_sampfctr, n_cmpnts))){
@@ -164,8 +162,7 @@ int main(int argc, char *argv[])
    odata = tdata;
    olen = tlen;
 
-   if(debug > 0)
-      fprintf(stdout, "YCbCr data downsampled\n");
+   
 
    if(intrlvflag){
       if((ret = not2intrlv_mem(&tdata, &tlen, odata, width, height, depth,
@@ -186,8 +183,7 @@ int main(int argc, char *argv[])
       exit(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Image data written to file %s\n", ofile);
+   
 
    free(odata);
 

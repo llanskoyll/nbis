@@ -112,8 +112,7 @@ int main(int argc, char *argv[])
                            vrt_sampfctr, n_cmpnts, intrlvflag)))
       exit(ret);
 
-   if(debug > 0)
-      fprintf(stdout, "File %s read\n", ifile);
+   
 
    if(intrlvflag){
       if((ret = intrlv2not_mem(&tdata, &tlen, idata, width, height, depth,
@@ -135,8 +134,7 @@ int main(int argc, char *argv[])
    idata = tdata;
    ilen = tlen;
 
-   if(debug > 0)
-      fprintf(stdout, "YCbCr data upsampled\n");
+   
 
    if((ret = ycc2rgb_nonintrlv_mem(&odata, &olen, idata, width,
                                    height, depth))){
@@ -145,8 +143,7 @@ int main(int argc, char *argv[])
    }
    free(idata);
 
-   if(debug > 0)
-      fprintf(stdout, "Image data converted to YCbCr\n");
+   
 
    if(intrlvflag){
       out_hor_sampfctr[0] = 1;
@@ -174,8 +171,7 @@ int main(int argc, char *argv[])
       exit(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Image data written to file %s\n", ofile);
+   
 
    free(odata);
 

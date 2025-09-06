@@ -348,8 +348,7 @@ int read_transform_table(
    unsigned int cnt, shrt_dat;           /* counter and temp short data */
    unsigned char scale, sign;            /* scaling and sign parameters */
 
-   if(debug > 0)
-      fprintf(stderr, "Reading transform table.\n");
+   
 
    if((ret = read_ushort(&hdr_size, infp)))
       return(ret);
@@ -359,10 +358,6 @@ int read_transform_table(
       return(ret);
 
 
-   if(debug > 2) {
-      fprintf(stderr, "losize = %d\n", dtt_table->losz);
-      fprintf(stderr, "hisize = %d\n", dtt_table->hisz);
-   }
 
    /* Added 02-24-05 by MDG */
    /* If lofilt member previously allocated ... */
@@ -437,9 +432,6 @@ int read_transform_table(
       if(sign != 0)
          a_lofilt[cnt] *= -1.0;
 
-      if(debug > 3)
-         fprintf(stderr, "lofilt[%d] = %.15f\n", cnt, a_lofilt[cnt]);
-
       if(dtt_table->hisz % 2) {
          dtt_table->hifilt[cnt + a_size] = (float)((float)int_sign(cnt)
                                          * a_lofilt[cnt]);
@@ -498,9 +490,6 @@ int read_transform_table(
       if(sign != 0)
          a_hifilt[cnt] *= -1.0;
 
-      if(debug > 2)
-         fprintf(stderr, "hifilt[%d] = %.15f\n", cnt, a_hifilt[cnt]);
-
       if(dtt_table->losz % 2) {
          dtt_table->lofilt[cnt + a_size] = (float)((float)int_sign(cnt)
                                          * a_hifilt[cnt]);
@@ -520,8 +509,7 @@ int read_transform_table(
    dtt_table->lodef = 1;
    dtt_table->hidef = 1;
 
-   if(debug > 0)
-      fprintf(stderr, "Finished reading transform table.\n\n");
+   
 
    return(0);
 }
@@ -541,8 +529,7 @@ int getc_transform_table(
    unsigned int cnt, shrt_dat;           /* counter and temp short data */
    unsigned char scale, sign;            /* scaling and sign parameters */
 
-   if(debug > 0)
-      fprintf(stderr, "Reading transform table.\n");
+   
 
    if((ret = getc_ushort(&hdr_size, cbufptr, ebufptr)))
       return(ret);
@@ -552,10 +539,6 @@ int getc_transform_table(
       return(ret);
 
 
-   if(debug > 2) {
-      fprintf(stderr, "losize = %d\n", dtt_table->losz);
-      fprintf(stderr, "hisize = %d\n", dtt_table->hisz);
-   }
 
    /* Added 02-24-05 by MDG */
    /* If lofilt member previously allocated ... */
@@ -630,9 +613,6 @@ int getc_transform_table(
       if(sign != 0)
          a_lofilt[cnt] *= -1.0;
 
-      if(debug > 3)
-         fprintf(stderr, "lofilt[%d] = %.15f\n", cnt, a_lofilt[cnt]);
-
       if(dtt_table->hisz % 2) {
          dtt_table->hifilt[cnt + a_size] = (float)((float)int_sign(cnt)
                                          * a_lofilt[cnt]);
@@ -691,9 +671,6 @@ int getc_transform_table(
       if(sign != 0)
          a_hifilt[cnt] *= -1.0;
 
-      if(debug > 2)
-         fprintf(stderr, "hifilt[%d] = %.15f\n", cnt, a_hifilt[cnt]);
-
       if(dtt_table->losz % 2) {
          dtt_table->lofilt[cnt + a_size] = (float)((float)int_sign(cnt)
                                          * a_hifilt[cnt]);
@@ -713,8 +690,7 @@ int getc_transform_table(
    dtt_table->lodef = 1;
    dtt_table->hidef = 1;
 
-   if(debug > 0)
-      fprintf(stderr, "Finished reading transform table.\n\n");
+   
 
    return(0);
 }
@@ -735,8 +711,7 @@ int write_transform_table(
    float dbl_tmp;        /* temp variable */
    char scale_ex, sign;  /* exponent scaling and sign parameters */
 
-   if(debug > 0)
-      fprintf(stderr, "Writing transform table.\n");
+   
 
    if((ret = write_ushort(DTT_WSQ, outfp)))
       return(ret);
@@ -777,10 +752,7 @@ int write_transform_table(
          return(-80);
       }
 
-      if(debug > 2) {
-         fprintf(stderr, "lo[%d] = %u\n", coef, int_dat);
-         fprintf(stderr, "lof[%d] = %0.15f\n", coef, lofilt[coef]);
-      }
+
 
       if((ret = write_byte(sign, outfp)))
          return(ret);
@@ -818,10 +790,6 @@ int write_transform_table(
          return(-81);
       }
 
-      if(debug > 2) {
-         fprintf(stderr, "hi[%d] = %u\n", coef, int_dat);
-         fprintf(stderr, "hif[%d] = %0.15f\n", coef, hifilt[coef]);
-      }
 
       if((ret = write_byte(sign, outfp)))
          return(ret);
@@ -831,8 +799,7 @@ int write_transform_table(
          return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Finished writing transform table.\n\n");
+   
 
    return(0);
 }
@@ -855,8 +822,7 @@ int putc_transform_table(
    float dbl_tmp;       /* temp variable */
    char scale_ex, sign; /* exponent scaling and sign parameters */
 
-   if(debug > 0)
-      fprintf(stderr, "Writing transform table.\n");
+   
 
    if((ret = putc_ushort(DTT_WSQ, odata, oalloc, olen)))
       return(ret);
@@ -898,10 +864,6 @@ int putc_transform_table(
          return(-82);
       }
 
-      if(debug > 2) {
-         fprintf(stderr, "lo[%d] = %u\n", coef, int_dat);
-         fprintf(stderr, "lof[%d] = %0.15f\n", coef, lofilt[coef]);
-      }
 
       if((ret = putc_byte(sign, odata, oalloc, olen)))
          return(ret);
@@ -939,10 +901,6 @@ int putc_transform_table(
          return(-83);
       }
 
-      if(debug > 2) {
-         fprintf(stderr, "hi[%d] = %u\n", coef, int_dat);
-         fprintf(stderr, "hif[%d] = %0.15f\n", coef, hifilt[coef]);
-      }
 
       if((ret = putc_byte(sign, odata, oalloc, olen)))
          return(ret);
@@ -952,8 +910,7 @@ int putc_transform_table(
          return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Finished writing transform table.\n\n");
+   
 
    return(0);
 }
@@ -970,8 +927,7 @@ int read_quantization_table(
    unsigned short cnt, shrt_dat;  /* counter and temp short data */
    unsigned char scale;           /* scaling parameter */
 
-   if(debug > 0)
-      fprintf(stderr, "Reading quantization table.\n");
+   
 
    if((ret = read_ushort(&hdr_size, infp)))
       return(ret);
@@ -1005,15 +961,11 @@ int read_quantization_table(
          scale--;
       }
 
-      if(debug > 2)
-         fprintf(stderr, "q[%d] = %f :: z[%d] = %f\n",
-         cnt, dqt_table->q_bin[cnt], cnt, dqt_table->z_bin[cnt]);
 
    }
    dqt_table->dqt_def = 1;
 
-   if(debug > 0)
-      fprintf(stderr, "Finished reading quantization table.\n\n");
+   
 
    return(0);
 }
@@ -1032,8 +984,7 @@ int getc_quantization_table(
    unsigned short cnt, shrt_dat;  /* counter and temp short data */
    unsigned char scale;           /* scaling parameter */
 
-   if(debug > 0)
-      fprintf(stderr, "Reading quantization table.\n");
+   
 
    if((ret = getc_ushort(&hdr_size, cbufptr, ebufptr)))
       return(ret);
@@ -1067,15 +1018,11 @@ int getc_quantization_table(
          scale--;
       }
 
-      if(debug > 2)
-         fprintf(stderr, "q[%d] = %f :: z[%d] = %f\n",
-         cnt, dqt_table->q_bin[cnt], cnt, dqt_table->z_bin[cnt]);
 
    }
    dqt_table->dqt_def = 1;
 
-   if(debug > 0)
-      fprintf(stderr, "Finished reading quantization table.\n\n");
+   
 
    return(0);
 }
@@ -1094,8 +1041,7 @@ int write_quantization_table(
    float flt_tmp;               /* temp variable */
 
 
-   if(debug > 0)
-      fprintf(stderr, "Writing quantization table.\n");
+   
 
    if((ret = write_ushort(DQT_WSQ, outfp)))
       return(ret);
@@ -1162,13 +1108,6 @@ int write_quantization_table(
          shrt_dat2 = 0;
       }
 
-      if(debug > 2) {
-         fprintf(stderr,
-         "qi[%d] = %d    ::  zi[%d] = %d\n", sub, shrt_dat, sub, shrt_dat2);
-         fprintf(stderr,
-         "q[%d] = %5.7f  ::  z[%d] = %5.7f\n", sub, quant_vals->qbss[sub],
-          sub, quant_vals->qzbs[sub]);
-      }
 
       if((ret = write_byte(scale_ex, outfp)))
          return(ret);
@@ -1180,8 +1119,7 @@ int write_quantization_table(
          return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Finished writing quantization table.\n\n");
+   
 
    return(0);
 }
@@ -1201,8 +1139,7 @@ int putc_quantization_table(
    float flt_tmp;              /* temp variable */
 
 
-   if(debug > 0)
-      fprintf(stderr, "Writing quantization table.\n");
+   
 
    if((ret = putc_ushort(DQT_WSQ, odata, oalloc, olen)))
       return(ret);
@@ -1269,13 +1206,6 @@ int putc_quantization_table(
          shrt_dat2 = 0;
       }
 
-      if(debug > 2) {
-         fprintf(stderr,
-         "qi[%d] = %d    ::  zi[%d] = %d\n", sub, shrt_dat, sub, shrt_dat2);
-         fprintf(stderr,
-         "q[%d] = %5.7f  ::  z[%d] = %5.7f\n", sub, quant_vals->qbss[sub],
-          sub, quant_vals->qzbs[sub]);
-      }
 
       if((ret = putc_byte(scale_ex, odata, oalloc, olen)))
          return(ret);
@@ -1287,8 +1217,7 @@ int putc_quantization_table(
          return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Finished writing quantization table.\n\n");
+   
 
    return(0);
 }
@@ -1413,8 +1342,7 @@ int read_frame_header_wsq(
    unsigned short hdr_size, shrt_dat;  /* header size and data pointer */
    unsigned char scale;                /* exponent scaling parameter */
 
-   if(debug > 0)
-      fprintf(stderr, "Reading frame header.\n");
+   
 
    if((ret = read_ushort(&hdr_size, infp)))
       return(ret);
@@ -1450,19 +1378,7 @@ int read_frame_header_wsq(
    if((ret = read_ushort(&(frm_header->software), infp)))
       return(ret);
 
-   if(debug > 2) {
-       fprintf(stderr, "black = %d :: white = %u\n",
-               frm_header->black, frm_header->white);
-       fprintf(stderr, "w = %d :: h = %d\n",
-               frm_header->width, frm_header->height);
-       fprintf(stderr, "m_shift = %f :: r_scale = %f\n",
-               frm_header->m_shift,frm_header->r_scale);
-       fprintf(stdout, "WSQ_encoder = %d\n",
-                        frm_header->wsq_encoder);
-       fprintf(stdout, "Software = %d\n", frm_header->software);
-   }
-   if(debug > 0)
-      fprintf(stderr, "Finished reading frame header.\n\n");
+   
    
    return(0);
 }
@@ -1479,8 +1395,7 @@ int getc_frame_header_wsq(
    unsigned short hdr_size, shrt_dat;  /* header size and data pointer */
    unsigned char scale;                /* exponent scaling parameter */
 
-   if(debug > 0)
-      fprintf(stderr, "Reading frame header.\n");
+   
 
    if((ret = getc_ushort(&hdr_size, cbufptr, ebufptr)))
       return(ret);
@@ -1515,20 +1430,7 @@ int getc_frame_header_wsq(
       return(ret);
    if((ret = getc_ushort(&(frm_header->software), cbufptr, ebufptr)))
       return(ret);
-
-   if(debug > 2) {
-       fprintf(stderr, "black = %d :: white = %u\n",
-               frm_header->black, frm_header->white);
-       fprintf(stderr, "w = %d :: h = %d\n",
-               frm_header->width, frm_header->height);
-       fprintf(stderr, "m_shift = %f :: r_scale = %f\n",
-               frm_header->m_shift,frm_header->r_scale);
-       fprintf(stdout, "WSQ_encoder = %d\n",
-                        frm_header->wsq_encoder);
-       fprintf(stdout, "Software = %d\n", frm_header->software);
-   }
-   if(debug > 0)
-      fprintf(stderr, "Finished reading frame header.\n\n");
+   
    
    return(0);
 }
@@ -1548,8 +1450,7 @@ int write_frame_header_wsq(
    char scale_ex;        /* exponent scaling parameter */
    unsigned short shrt_dat;      /* temp variable */
 
-   if(debug > 0)
-      fprintf(stderr, "Writing frame header.\n");
+   
 
    if((ret = write_ushort(SOF_WSQ, outfp)))
       return(ret);
@@ -1566,10 +1467,6 @@ int write_frame_header_wsq(
       return(ret);
    if((ret = write_ushort(width, outfp)))
       return(ret);
-
-   if(debug > 2)
-      fprintf(stderr,
-              "m_shift = %f  :: r_scale = %f\n", m_shift, r_scale);
 
    flt_tmp = m_shift;
    scale_ex = 0;
@@ -1609,8 +1506,7 @@ int write_frame_header_wsq(
    if((ret = write_ushort(0, outfp)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stderr, "Finished writing frame header.\n\n");
+   
 
    return(0);
 }
@@ -1632,8 +1528,7 @@ int putc_frame_header_wsq(
    char scale_ex;         /* exponent scaling parameter */
    unsigned short shrt_dat;       /* temp variable */
 
-   if(debug > 0)
-      fprintf(stderr, "Writing frame header.\n");
+   
 
    if((ret = putc_ushort(SOF_WSQ, odata, oalloc, olen)))
       return(ret);
@@ -1650,10 +1545,6 @@ int putc_frame_header_wsq(
       return(ret);
    if((ret = putc_ushort(width, odata, oalloc, olen)))
       return(ret);
-
-   if(debug > 2)
-      fprintf(stderr,
-              "m_shift = %f  :: r_scale = %f\n", m_shift, r_scale);
 
    flt_tmp = m_shift;
    scale_ex = 0;
@@ -1693,8 +1584,7 @@ int putc_frame_header_wsq(
    if((ret = putc_ushort(0, odata, oalloc, olen)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stderr, "Finished writing frame header.\n\n");
+   
 
    return(0);
 }
@@ -1709,18 +1599,12 @@ int read_block_header(
    int ret;
    unsigned short hdr_size;     /* block header size */
 
-   if(debug > 0)
-      fprintf(stderr, "Reading block header.\n");
+   
 
    if((ret = read_ushort(&hdr_size, infp)))
       return(ret);
    if((ret = read_byte(huff_table, infp)))
       return(ret);
-
-   if(debug > 2)
-      fprintf(stderr, "huff_table = %d\n", *huff_table);
-   if(debug > 0)
-      fprintf(stderr, "Finished reading block header.\n\n");
 
    return(0);
 }
@@ -1736,18 +1620,12 @@ int getc_block_header(
    int ret;
    unsigned short hdr_size;     /* block header size */
 
-   if(debug > 0)
-      fprintf(stderr, "Reading block header.\n");
+   
 
    if((ret = getc_ushort(&hdr_size, cbufptr, ebufptr)))
       return(ret);
    if((ret = getc_byte(huff_table, cbufptr, ebufptr)))
       return(ret);
-
-   if(debug > 2)
-      fprintf(stderr, "huff_table = %d\n", *huff_table);
-   if(debug > 0)
-      fprintf(stderr, "Finished reading block header.\n\n");
 
    return(0);
 }
@@ -1761,8 +1639,7 @@ int write_block_header(
 {
    int ret;
 
-   if(debug > 0)
-      fprintf(stderr, "Writing block header.\n");
+   
 
    if((ret = write_ushort(SOB_WSQ, outfp)))
       return(ret);
@@ -1772,8 +1649,7 @@ int write_block_header(
    if((ret = write_byte(table, outfp)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stderr, "Finished writing block header.\n\n");
+   
 
    return(0);
 }
@@ -1789,8 +1665,7 @@ int putc_block_header(
 {
    int ret;
 
-   if(debug > 0)
-      fprintf(stderr, "Writing block header.\n");
+   
 
    if((ret = putc_ushort(SOB_WSQ, odata, oalloc, olen)))
       return(ret);
@@ -1800,8 +1675,7 @@ int putc_block_header(
    if((ret = putc_byte((unsigned char)table, odata, oalloc, olen)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stderr, "Finished writing block header.\n\n");
+   
 
    return(0);
 }

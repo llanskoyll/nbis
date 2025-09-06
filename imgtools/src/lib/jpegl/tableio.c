@@ -125,14 +125,14 @@ of the software.
 /************************************/
 int read_marker_jpegl(unsigned short *omarker, const int type, FILE *infp)
 {
+   int debug = -1;
    int ret;
    unsigned short marker;
 
    if((ret = read_ushort(&marker, infp)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stdout, "Read Marker = %d, type %d\n", marker, type);
+   
 
    switch(type){
    case SOI:
@@ -194,8 +194,7 @@ int getc_marker_jpegl(unsigned short *omarker, const int type,
    if((ret = getc_ushort(&marker, cbufptr, ebufptr)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stdout, "Read Marker = %d, type %d\n", marker, type);
+   
 
    switch(type){
    case SOI:
@@ -288,8 +287,7 @@ int read_jfif_header(JFIF_HEADER **ojfif_header, FILE *infp)
 
    int debug = -1;
 
-   if(debug > 0)
-      fprintf(stdout, "Start reading JFIF header.\n");
+   
 
    jfif_header = (JFIF_HEADER *)malloc(sizeof(JFIF_HEADER));
    if(jfif_header == (JFIF_HEADER *)NULL){
@@ -348,20 +346,19 @@ int read_jfif_header(JFIF_HEADER **ojfif_header, FILE *infp)
       return(-12);
    }
 
-   if(debug > 1){
-      fprintf(stdout, "Table Len = %d\n", table_len);
-      fprintf(stdout, "Ident = %s\n", jfif_header->ident);
-      fprintf(stdout, "version = %d.", (jfif_header->ver & 0xff00) >> 8);
-      fprintf(stdout, "%02d\n", (jfif_header->ver & 0x00ff));
-      fprintf(stdout, "units = %d\n", jfif_header->units);
-      fprintf(stdout, "dx = %d\n", jfif_header->dx);
-      fprintf(stdout, "dy = %d\n", jfif_header->dy);
-      fprintf(stdout, "tx = %d\n", jfif_header->tx);
-      fprintf(stdout, "ty = %d\n", jfif_header->ty);
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Table Len = %d\n", table_len);
+       fprintf(stdout, "Ident = %s\n", jfif_header->ident);
+       fprintf(stdout, "version = %d.", (jfif_header->ver & 0xff00) >> 8);
+       fprintf(stdout, "%02d\n", (jfif_header->ver & 0x00ff));
+       fprintf(stdout, "units = %d\n", jfif_header->units);
+       fprintf(stdout, "dx = %d\n", jfif_header->dx);
+       fprintf(stdout, "dy = %d\n", jfif_header->dy);
+       fprintf(stdout, "tx = %d\n", jfif_header->tx);
+       fprintf(stdout, "ty = %d\n", jfif_header->ty);
+    } */
 
-   if(debug > 0)
-      fprintf(stdout, "Finished reading JFIF header.\n");
+   
 
    *ojfif_header = jfif_header;
    return(0);
@@ -379,8 +376,7 @@ int getc_jfif_header(JFIF_HEADER **ojfif_header,
    JFIF_HEADER *jfif_header;
    unsigned short table_len;
 
-   if(debug > 0)
-      fprintf(stdout, "Start reading JFIF header.\n");
+   
 
    jfif_header = (JFIF_HEADER *)malloc(sizeof(JFIF_HEADER));
    if(jfif_header == (JFIF_HEADER *)NULL){
@@ -440,20 +436,19 @@ int getc_jfif_header(JFIF_HEADER **ojfif_header,
       return(-12);
    }
 
-   if(debug > 1){
-      fprintf(stdout, "Table Len = %d\n", table_len);
-      fprintf(stdout, "Ident = %s\n", jfif_header->ident);
-      fprintf(stdout, "version = %d.", (jfif_header->ver & 0xff00) >> 8);
+   /* if(debug > 1){
+       fprintf(stdout, "Table Len = %d\n", table_len);
+       fprintf(stdout, "Ident = %s\n", jfif_header->ident);
+       fprintf(stdout, "version = %d.", (jfif_header->ver & 0xff00) >> 8);
       fprintf(stdout, "%02d\n", (jfif_header->ver & 0x00ff));
-      fprintf(stdout, "units = %d\n", jfif_header->units);
-      fprintf(stdout, "dx = %d\n", jfif_header->dx);
-      fprintf(stdout, "dy = %d\n", jfif_header->dy);
-      fprintf(stdout, "tx = %d\n", jfif_header->tx);
-      fprintf(stdout, "ty = %d\n", jfif_header->ty);
-   }
+       fprintf(stdout, "units = %d\n", jfif_header->units);
+       fprintf(stdout, "dx = %d\n", jfif_header->dx);
+       fprintf(stdout, "dy = %d\n", jfif_header->dy);
+       fprintf(stdout, "tx = %d\n", jfif_header->tx);
+       fprintf(stdout, "ty = %d\n", jfif_header->ty);
+    } */
 
-   if(debug > 0)
-      fprintf(stdout, "Finished reading JFIF header.\n");
+   
 
    *ojfif_header = jfif_header;
    return(0);
@@ -469,8 +464,7 @@ int write_jfif_header(JFIF_HEADER *jfif_header, FILE *outfp)
    int table_len, i;
    int ret;
 
-   if(debug > 0)
-      fprintf(stdout, "Start writing JFIF header.\n");
+   
    
    if(strcmp(jfif_header->ident, JFIF_IDENT) != 0){
       fprintf(stderr, "ERROR : write_jfif_header : Not a JFIF Header\n");
@@ -484,17 +478,17 @@ int write_jfif_header(JFIF_HEADER *jfif_header, FILE *outfp)
 
    table_len = JFIF_HEADER_LEN;
 
-   if(debug > 1){
-      fprintf(stdout, "Table Len = %d\n", table_len);
-      fprintf(stdout, "Ident = %s\n", jfif_header->ident);
-      fprintf(stdout, "version = %d.", (jfif_header->ver & 0xff00) >> 8);
-      fprintf(stdout, "%02d\n", (jfif_header->ver & 0x00ff));
-      fprintf(stdout, "units = %d\n", jfif_header->units);
-      fprintf(stdout, "dx = %d\n", jfif_header->dx);
-      fprintf(stdout, "dy = %d\n", jfif_header->dy);
-      fprintf(stdout, "tx = %d\n", jfif_header->tx);
-      fprintf(stdout, "ty = %d\n", jfif_header->ty);
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Table Len = %d\n", table_len);
+       fprintf(stdout, "Ident = %s\n", jfif_header->ident);
+       fprintf(stdout, "version = %d.", (jfif_header->ver & 0xff00) >> 8);
+       fprintf(stdout, "%02d\n", (jfif_header->ver & 0x00ff));
+       fprintf(stdout, "units = %d\n", jfif_header->units);
+       fprintf(stdout, "dx = %d\n", jfif_header->dx);
+       fprintf(stdout, "dy = %d\n", jfif_header->dy);
+       fprintf(stdout, "tx = %d\n", jfif_header->tx);
+       fprintf(stdout, "ty = %d\n", jfif_header->ty);
+    } */
 
    /* APP0 0xffe0 */
    if((ret = write_ushort(APP0, outfp)))
@@ -522,8 +516,7 @@ int write_jfif_header(JFIF_HEADER *jfif_header, FILE *outfp)
    if((ret = write_byte(jfif_header->ty, outfp)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stdout, "Finished writing JFIF header.\n");
+   
 
    return(0);
 }
@@ -538,8 +531,7 @@ int putc_jfif_header(JFIF_HEADER *jfif_header, unsigned char *outbuf,
    int table_len, i;
    int ret;
 
-   if(debug > 0)
-      fprintf(stdout, "Start writing JFIF header.\n");
+   
    
    if(strcmp(jfif_header->ident, JFIF_IDENT) != 0){
       fprintf(stderr, "ERROR : putc_jfif_header : Not a JFIF Header\n");
@@ -553,17 +545,17 @@ int putc_jfif_header(JFIF_HEADER *jfif_header, unsigned char *outbuf,
 
    table_len = JFIF_HEADER_LEN;
 
-   if(debug > 1){
-      fprintf(stdout, "Table Len = %d\n", table_len);
-      fprintf(stdout, "Ident = %s\n", jfif_header->ident);
-      fprintf(stdout, "version = %d.", (jfif_header->ver & 0xff00) >> 8);
-      fprintf(stdout, "%02d\n", (jfif_header->ver & 0x00ff));
-      fprintf(stdout, "units = %d\n", jfif_header->units);
-      fprintf(stdout, "dx = %d\n", jfif_header->dx);
-      fprintf(stdout, "dy = %d\n", jfif_header->dy);
-      fprintf(stdout, "tx = %d\n", jfif_header->tx);
-      fprintf(stdout, "ty = %d\n", jfif_header->ty);
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Table Len = %d\n", table_len);
+       fprintf(stdout, "Ident = %s\n", jfif_header->ident);
+       fprintf(stdout, "version = %d.", (jfif_header->ver & 0xff00) >> 8);
+       fprintf(stdout, "%02d\n", (jfif_header->ver & 0x00ff));
+       fprintf(stdout, "units = %d\n", jfif_header->units);
+       fprintf(stdout, "dx = %d\n", jfif_header->dx);
+       fprintf(stdout, "dy = %d\n", jfif_header->dy);
+       fprintf(stdout, "tx = %d\n", jfif_header->tx);
+       fprintf(stdout, "ty = %d\n", jfif_header->ty);
+    } */
 
    /* APP0 0xffe0 */
    if((ret = putc_ushort(APP0, outbuf, outalloc, outlen)))
@@ -591,8 +583,7 @@ int putc_jfif_header(JFIF_HEADER *jfif_header, unsigned char *outbuf,
    if((ret = putc_byte(jfif_header->ty, outbuf, outalloc, outlen)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stdout, "Finished writing JFIF header.\n");
+   
 
    return(0);
 }
@@ -703,8 +694,7 @@ int read_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header, FILE *infp)
    unsigned short Lf;
    FRM_HEADER_JPEGL *frm_header;
 
-   if(debug > 0)
-      fprintf(stdout, "Start reading frame header.\n");
+   
 
    frm_header = (FRM_HEADER_JPEGL *)malloc(sizeof(FRM_HEADER_JPEGL));
    if(frm_header == (FRM_HEADER_JPEGL *)NULL){
@@ -757,21 +747,20 @@ int read_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header, FILE *infp)
       }
    }
 
-   if(debug > 1){
-      fprintf(stdout, "Lf = %d\n", Lf);
-      fprintf(stdout, "P = %d\n", frm_header->prec);
-      fprintf(stdout, "Y = %d\n", frm_header->y);
-      fprintf(stdout, "X = %d\n", frm_header->x);
-      fprintf(stdout, "Nf = %d\n", frm_header->Nf);
-      for(i = 0; i < frm_header->Nf; i++) {
-         fprintf(stdout, "C[%d] = %d\n", i, frm_header->C[i]);
-         fprintf(stdout, "HV[%d] = %d\n", i, frm_header->HV[i]);
-         fprintf(stdout, "Tq[%d] = %d\n", i, frm_header->Tq[i]);
-      }
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Lf = %d\n", Lf);
+       fprintf(stdout, "P = %d\n", frm_header->prec);
+       fprintf(stdout, "Y = %d\n", frm_header->y);
+       fprintf(stdout, "X = %d\n", frm_header->x);
+       fprintf(stdout, "Nf = %d\n", frm_header->Nf);
+       for(i = 0; i < frm_header->Nf; i++) {
+          fprintf(stdout, "C[%d] = %d\n", i, frm_header->C[i]);
+          fprintf(stdout, "HV[%d] = %d\n", i, frm_header->HV[i]);
+          fprintf(stdout, "Tq[%d] = %d\n", i, frm_header->Tq[i]);
+       }
+    } */
 
-   if(debug > 0)
-      fprintf(stdout, "Finished frame frame header.\n\n");
+   
 
    *ofrm_header = frm_header;
    return(0);
@@ -788,8 +777,7 @@ int getc_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header,
    unsigned short Lf;
    FRM_HEADER_JPEGL *frm_header;
 
-   if(debug > 0)
-      fprintf(stdout, "Start reading frame header.\n");
+   
 
    frm_header = (FRM_HEADER_JPEGL *)malloc(sizeof(FRM_HEADER_JPEGL));
    if(frm_header == (FRM_HEADER_JPEGL *)NULL){
@@ -842,21 +830,20 @@ int getc_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header,
       }
    }
 
-   if(debug > 1){
-      fprintf(stdout, "Lf = %d\n", Lf);
-      fprintf(stdout, "P = %d\n", frm_header->prec);
-      fprintf(stdout, "Y = %d\n", frm_header->y);
-      fprintf(stdout, "X = %d\n", frm_header->x);
-      fprintf(stdout, "Nf = %d\n", frm_header->Nf);
-      for(i = 0; i < frm_header->Nf; i++) {
-         fprintf(stdout, "C[%d] = %d\n", i, frm_header->C[i]);
-         fprintf(stdout, "HV[%d] = %d\n", i, frm_header->HV[i]);
-         fprintf(stdout, "Tq[%d] = %d\n", i, frm_header->Tq[i]);
-      }
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Lf = %d\n", Lf);
+       fprintf(stdout, "P = %d\n", frm_header->prec);
+       fprintf(stdout, "Y = %d\n", frm_header->y);
+       fprintf(stdout, "X = %d\n", frm_header->x);
+       fprintf(stdout, "Nf = %d\n", frm_header->Nf);
+       for(i = 0; i < frm_header->Nf; i++) {
+          fprintf(stdout, "C[%d] = %d\n", i, frm_header->C[i]);
+          fprintf(stdout, "HV[%d] = %d\n", i, frm_header->HV[i]);
+          fprintf(stdout, "Tq[%d] = %d\n", i, frm_header->Tq[i]);
+       }
+    } */
 
-   if(debug > 0)
-      fprintf(stdout, "Finished frame frame header.\n\n");
+   
 
    *ofrm_header = frm_header;
    return(0);
@@ -871,21 +858,20 @@ int write_frame_header_jpegl(FRM_HEADER_JPEGL *frm_header, FILE *outfp)
    int i, ret;
    int debug = -1;
 
-   if(debug > 0)
-      fprintf(stdout, "Start writing frame header.\n");
+   
 
-   if(debug > 1){
-      fprintf(stdout, "Lf = %d\n", 8+(3*frm_header->Nf));
-      fprintf(stdout, "P = %d\n", frm_header->prec);
-      fprintf(stdout, "Y = %d\n", frm_header->y);
-      fprintf(stdout, "X = %d\n", frm_header->x);
-      fprintf(stdout, "Nf = %d\n", frm_header->Nf);
-      for(i = 0; i < frm_header->Nf; i++) {
-         fprintf(stdout, "C[%d] = %d\n", i, frm_header->C[i]);
-         fprintf(stdout, "HV[%d] = %d\n", i, frm_header->HV[i]);
-         fprintf(stdout, "Tq[%d] = %d\n", i, frm_header->Tq[i]);
-      }
-   }
+   /* if(debug > 1){
+       fprintf(stdout, "Lf = %d\n", 8+(3*frm_header->Nf));
+       fprintf(stdout, "P = %d\n", frm_header->prec);
+       fprintf(stdout, "Y = %d\n", frm_header->y);
+       fprintf(stdout, "X = %d\n", frm_header->x);
+       fprintf(stdout, "Nf = %d\n", frm_header->Nf);
+       for(i = 0; i < frm_header->Nf; i++) {
+          fprintf(stdout, "C[%d] = %d\n", i, frm_header->C[i]);
+          fprintf(stdout, "HV[%d] = %d\n", i, frm_header->HV[i]);
+          fprintf(stdout, "Tq[%d] = %d\n", i, frm_header->Tq[i]);
+       }
+    } */
 
    /* SOF3 */
    if((ret = write_ushort(SOF3, outfp)))
@@ -918,8 +904,7 @@ int write_frame_header_jpegl(FRM_HEADER_JPEGL *frm_header, FILE *outfp)
          return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Finished writing frame header.\n\n");
+   
 
    return(0);
 }
@@ -933,13 +918,12 @@ int putc_frame_header_jpegl(FRM_HEADER_JPEGL *frm_header, unsigned char *outbuf,
    int debug = -1;
    int i, ret;
 
-   if(debug > 0)
-      fprintf(stdout, "Start writing frame header.\n");
+   
 
-   if(debug > 1){
-      fprintf(stdout, "Lf = %d\n", 8+(3*frm_header->Nf));
+   /* if(debug > 1){
+    fprintf(stdout, "Lf = %d\n", 8+(3*frm_header->Nf));
       fprintf(stdout, "P = %d\n", frm_header->prec);
-      fprintf(stdout, "Y = %d\n", frm_header->y);
+    fprintf(stdout, "Y = %d\n", frm_header->y);
       fprintf(stdout, "X = %d\n", frm_header->x);
       fprintf(stdout, "Nf = %d\n", frm_header->Nf);
       for(i = 0; i < frm_header->Nf; i++) {
@@ -947,7 +931,7 @@ int putc_frame_header_jpegl(FRM_HEADER_JPEGL *frm_header, unsigned char *outbuf,
          fprintf(stdout, "HV[%d] = %d\n", i, frm_header->HV[i]);
          fprintf(stdout, "Tq[%d] = %d\n", i, frm_header->Tq[i]);
       }
-   }
+   // } */
 
    /* SOF3 */
    if((ret = putc_ushort(SOF3, outbuf, outalloc, outlen)))
@@ -980,8 +964,7 @@ int putc_frame_header_jpegl(FRM_HEADER_JPEGL *frm_header, unsigned char *outbuf,
          return(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Finished writing frame header.\n\n");
+   
 
    return(0);
 }
@@ -1042,8 +1025,7 @@ int read_scan_header(SCN_HEADER **oscn_header, FILE *infp)
    unsigned short Ls;
    SCN_HEADER *scn_header;
 
-   if(debug > 0)
-      fprintf(stdout, "Start reading scan header\n");
+   
 
    scn_header = (SCN_HEADER *)malloc(sizeof(SCN_HEADER));
    if(scn_header == (SCN_HEADER *)NULL){
@@ -1092,8 +1074,8 @@ int read_scan_header(SCN_HEADER **oscn_header, FILE *infp)
       return(ret);
    }
 
-   if(debug > 1){
-      fprintf(stdout, "Ls = %d\n", Ls);
+   /* if(debug > 1){
+    fprintf(stdout, "Ls = %d\n", Ls);
       fprintf(stdout, "Ns = %d\n", scn_header->Ns);
 
       for(i = 0; i < scn_header->Ns; i++) {
@@ -1103,11 +1085,10 @@ int read_scan_header(SCN_HEADER **oscn_header, FILE *infp)
 
       fprintf(stdout, "Ss = %d\n", scn_header->Ss);
       fprintf(stdout, "Se = %d\n", scn_header->Se);
-      fprintf(stdout, "Ahl = %d\n", scn_header->Ahl);
-   }
+   /  fprintf(stdout, "Ahl = %d\n", scn_header->Ahl);
+ } */
 
-   if(debug > 0)
-      fprintf(stdout, "Finished reading scan header\n");
+   
 
 
    *oscn_header = scn_header;
@@ -1125,8 +1106,7 @@ int getc_scan_header(SCN_HEADER **oscn_header, unsigned char **cbufptr,
    unsigned short Ls;
    SCN_HEADER *scn_header;
 
-   if(debug > 0)
-      fprintf(stdout, "Start reading scan header\n");
+   
 
    scn_header = (SCN_HEADER *)malloc(sizeof(SCN_HEADER));
    if(scn_header == (SCN_HEADER *)NULL){
@@ -1175,7 +1155,7 @@ int getc_scan_header(SCN_HEADER **oscn_header, unsigned char **cbufptr,
       return(ret);
    }
 
-   if(debug > 1){
+   /* if(debug > 1){
       fprintf(stdout, "Ls = %d\n", Ls);
       fprintf(stdout, "Ns = %d\n", scn_header->Ns);
 
@@ -1187,10 +1167,9 @@ int getc_scan_header(SCN_HEADER **oscn_header, unsigned char **cbufptr,
       fprintf(stdout, "Ss = %d\n", scn_header->Ss);
       fprintf(stdout, "Se = %d\n", scn_header->Se);
       fprintf(stdout, "Ahl = %d\n", scn_header->Ahl);
-   }
+   } */
 
-   if(debug > 0)
-      fprintf(stdout, "Finished reading scan header\n");
+   
 
 
    *oscn_header = scn_header;
@@ -1205,22 +1184,21 @@ int write_scan_header(SCN_HEADER *scn_header, FILE *outfp)
    int debug = -1;
    int i, ret;
 
-   if(debug > 0)
-      fprintf(stdout, "Start writing scan header\n");
+   
 
-   if(debug > 1){
-      fprintf(stdout, "Ls = %d\n", 6+(2*scn_header->Ns));
+/* if(debug > 1){
+    fprintf(stdout, "Ls = %d\n", 6+(2*scn_header->Ns));
       fprintf(stdout, "Ns = %d\n", scn_header->Ns);
 
-      for(i = 0; i < scn_header->Ns; i++) {
-         fprintf(stdout, "Cs[%d] = %d\n", i, scn_header->Cs[i]);
-         fprintf(stdout, "Tda[%d] = %d\n", i, scn_header->Tda[i]);
-      }
+    for(i = 0; i < scn_header->Ns; i++) {
+       fprintf(stdout, "Cs[%d] = %d\n", i, scn_header->Cs[i]);
+       fprintf(stdout, "Tda[%d] = %d\n", i, scn_header->Tda[i]);
+    }
 
-      fprintf(stdout, "Ss = %d\n", scn_header->Ss);
-      fprintf(stdout, "Se = %d\n", scn_header->Se);
-      fprintf(stdout, "Ahl = %d\n", scn_header->Ahl);
-   }
+    fprintf(stdout, "Ss = %d\n", scn_header->Ss);
+    fprintf(stdout, "Se = %d\n", scn_header->Se);
+    fprintf(stdout, "Ahl = %d\n", scn_header->Ahl);
+ } */
 
    /* SOS */
    if((ret = write_ushort(SOS, outfp)))
@@ -1251,8 +1229,7 @@ int write_scan_header(SCN_HEADER *scn_header, FILE *outfp)
    if((ret = write_byte(scn_header->Ahl, outfp)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stdout, "Finished writing scan header\n");
+   
 
    return(0);
 }
@@ -1266,22 +1243,20 @@ int putc_scan_header(SCN_HEADER *scn_header, unsigned char *outbuf,
    int debug = -1;
    int i, ret;
 
-   if(debug > 0)
-      fprintf(stdout, "Start writing scan header\n");
+   
 
-   if(debug > 1){
-      fprintf(stdout, "Ls = %d\n", 6+(2*scn_header->Ns));
+   /* if(debug > 1){
+    fprintf(stdout, "Ls = %d\n", 6+(2*scn_header->Ns));
       fprintf(stdout, "Ns = %d\n", scn_header->Ns);
 
-      for(i = 0; i < scn_header->Ns; i++) {
-         fprintf(stdout, "Cs[%d] = %d\n", i, scn_header->Cs[i]);
-         fprintf(stdout, "Tda[%d] = %d\n", i, scn_header->Tda[i]);
-      }
+    for(i = 0; i < scn_header->Ns; i++) {
+       fprintf(stdout, "Cs[%d] = %d\n", i, scn_header->Cs[i]);
+       fprintf(stdout, "Tda[%d] = %d\n", i, scn_header->Tda[i]);/    }
 
       fprintf(stdout, "Ss = %d\n", scn_header->Ss);
       fprintf(stdout, "Se = %d\n", scn_header->Se);
       fprintf(stdout, "Ahl = %d\n", scn_header->Ahl);
-   }
+   } */
 
    /* SOS */
    if((ret = putc_ushort(SOS, outbuf, outalloc, outlen)))
@@ -1312,8 +1287,7 @@ int putc_scan_header(SCN_HEADER *scn_header, unsigned char *outbuf,
    if((ret = putc_byte(scn_header->Ahl, outbuf, outalloc, outlen)))
       return(ret);
 
-   if(debug > 0)
-      fprintf(stdout, "Finished writing scan header\n");
+   
 
    return(0);
 }
@@ -1331,8 +1305,7 @@ int read_comment(
    unsigned short hdr_size;              /* header size */
    unsigned char *comment;
 
-   if(debug > 0)
-      fprintf(stderr, "Reading Comment Field.\n");
+   
 
    if((ret = read_ushort(&hdr_size, infp)))
       return(ret);
@@ -1360,8 +1333,7 @@ int read_comment(
    /* have one here by default due to the calloc of one extra byte at  */
    /* the end. */
 
-   if(debug > 0)
-      fprintf(stderr, "Comment =  %s", comment);
+   
 
    *ocomment = comment;
    return(0);
@@ -1381,8 +1353,7 @@ int getc_comment(
    unsigned char *comment;
    int debug = -1;
 
-   if(debug > 0)
-      fprintf(stderr, "Reading Comment Field.\n");
+   
 
    if((ret = getc_ushort(&hdr_size, cbufptr, ebufptr)))
       return(ret);
@@ -1407,8 +1378,7 @@ int getc_comment(
    /* have one here by default due to the calloc of one extra byte at  */
    /* the end. */
 
-   if(debug > 0)
-      fprintf(stderr, "Comment =  %s", comment);
+   
 
    *ocomment = comment;
    return(0);
@@ -1427,8 +1397,7 @@ int write_comment(
    unsigned short hdr_size;              /* header size */
    int debug = -1;
 
-   if(debug > 0)
-      fprintf(stderr, "Writing Comment Field.\n");
+   
 
    if((ret = write_ushort(marker, outfp)))
       return(ret);
@@ -1444,8 +1413,7 @@ int write_comment(
      return(-2);
    }
 
-   if(debug > 0)
-      fprintf(stderr, "Finished Writing Comment Field.\n");
+   
 
    return(0);
 }
@@ -1466,8 +1434,7 @@ int putc_comment(
    unsigned short hdr_size;              /* header size */
    int debug = -1;
 
-   if(debug > 0)
-      fprintf(stderr, "Writing Comment Field to Buffer.\n");
+   
 
    if((ret = putc_ushort(marker, odata, oalloc, olen)))
       return(ret);
@@ -1479,8 +1446,7 @@ int putc_comment(
       if((ret = putc_byte(comment[i], odata, oalloc, olen)))
          return(ret);
 
-   if(debug > 0)
-      fprintf(stderr, "Finished Writing Comment Field to Buffer.\n");
+   
 
    return(0);
 }

@@ -196,8 +196,7 @@ int main(int argc, char **argv)
       }
       fclose(infp);
 
-      if(debug > 0)
-         fprintf(stdout, "File %s read\n", ifile);
+      
 
       if((idata = (unsigned char *)malloc(width*height))==(unsigned char *)NULL){
          fprintf(stderr, "ERROR : %s : malloc : idata\n", argv[0]);
@@ -214,11 +213,6 @@ int main(int argc, char **argv)
          exit(ret);
       }
       free(tidata);
-      if(debug > 0){
-         fprintf(stdout, "Done decode JPEGL SD4 image\n");
-         fprintf(stdout, "Starting JPEGL compression\n");
-      }
-
       /* Used to setup integer array of length 1 initialized to 1. */
       sampfctr = 1;
       if((ret = setup_IMG_DAT_nonintrlv_encode(&img_dat, idata,
@@ -230,8 +224,7 @@ int main(int argc, char **argv)
          exit(ret);
       }
 
-      if(debug > 0)
-         fprintf(stdout, "Image structure initialized\n");
+      
 
       if((ret = jpegl_encode_mem(&odata, &olen, img_dat, comment_text))){
          free(comment_text);
@@ -241,10 +234,6 @@ int main(int argc, char **argv)
       free(comment_text);
       free_IMG_DAT(img_dat, FREE_IMAGE);
    }
-
-   if(debug > 0)
-      fprintf(stdout, "Image data converted, reformatted byte length = %d\n",
-              olen);
 
    /* Write reformatted file. */
 
@@ -256,8 +245,7 @@ int main(int argc, char **argv)
       exit(ret);
    }
 
-   if(debug > 0)
-      fprintf(stdout, "Image data written to file %s\n", ofile);
+   
 
    free(odata);
    exit(0);

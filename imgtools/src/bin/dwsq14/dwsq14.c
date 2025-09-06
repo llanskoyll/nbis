@@ -161,8 +161,8 @@ int main(int argc, char *argv[])
    }
    fclose(fp);
 
-   if(debug > 1)
-      fprintf(stderr, "Image pixmap constructed\n");
+   /* if(debug > 1)
+       fprintf(stderr, "Image pixmap constructed\n"); */
 
    /* Combine image attributes into current nistcom */
    if((ret = combine_wsq_nistcom(&nistcom, width, height, depth, ppi,
@@ -197,8 +197,8 @@ int main(int argc, char *argv[])
    }
    free(odata);
 
-   if(debug > 1)
-      fprintf(stderr, "Image pixmap written to %s\n", ofile);
+   /* if(debug > 1)
+      fprintf(stderr, "Image pixmap written to %s\n", ofile); */
 
    exit(0);
 }
