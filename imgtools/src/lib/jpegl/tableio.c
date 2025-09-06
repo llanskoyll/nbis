@@ -189,6 +189,8 @@ int getc_marker_jpegl(unsigned short *omarker, const int type,
    int ret;
    unsigned short marker;
 
+   int debug = -1;
+
    if((ret = getc_ushort(&marker, cbufptr, ebufptr)))
       return(ret);
 
@@ -284,6 +286,8 @@ int read_jfif_header(JFIF_HEADER **ojfif_header, FILE *infp)
    JFIF_HEADER *jfif_header;
    unsigned short table_len;
 
+   int debug = -1;
+
    if(debug > 0)
       fprintf(stdout, "Start reading JFIF header.\n");
 
@@ -369,6 +373,8 @@ int read_jfif_header(JFIF_HEADER **ojfif_header, FILE *infp)
 int getc_jfif_header(JFIF_HEADER **ojfif_header,
                      unsigned char **cbufptr, unsigned char *ebufptr)
 {
+
+   int debug = -1;
    int ret, i;
    JFIF_HEADER *jfif_header;
    unsigned short table_len;
@@ -458,6 +464,8 @@ int getc_jfif_header(JFIF_HEADER **ojfif_header,
 /******************************************/
 int write_jfif_header(JFIF_HEADER *jfif_header, FILE *outfp)
 {
+
+   int debug = -1;
    int table_len, i;
    int ret;
 
@@ -526,6 +534,7 @@ int write_jfif_header(JFIF_HEADER *jfif_header, FILE *outfp)
 int putc_jfif_header(JFIF_HEADER *jfif_header, unsigned char *outbuf,
                      const int outalloc, int *outlen)
 {
+   int debug = -1;
    int table_len, i;
    int ret;
 
@@ -689,6 +698,7 @@ int setup_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header, IMG_DAT *img_dat)
 /*******************************************/
 int read_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header, FILE *infp)
 {
+   int debug = -1;
    int ret, i;
    unsigned short Lf;
    FRM_HEADER_JPEGL *frm_header;
@@ -773,6 +783,7 @@ int read_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header, FILE *infp)
 int getc_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header,
                       unsigned char **cbufptr, unsigned char *ebufptr)
 {
+   int debug = -1;
    int ret, i;
    unsigned short Lf;
    FRM_HEADER_JPEGL *frm_header;
@@ -858,6 +869,7 @@ int getc_frame_header_jpegl(FRM_HEADER_JPEGL **ofrm_header,
 int write_frame_header_jpegl(FRM_HEADER_JPEGL *frm_header, FILE *outfp)
 {
    int i, ret;
+   int debug = -1;
 
    if(debug > 0)
       fprintf(stdout, "Start writing frame header.\n");
@@ -918,6 +930,7 @@ int write_frame_header_jpegl(FRM_HEADER_JPEGL *frm_header, FILE *outfp)
 int putc_frame_header_jpegl(FRM_HEADER_JPEGL *frm_header, unsigned char *outbuf,
                        const int outalloc, int *outlen)
 {
+   int debug = -1;
    int i, ret;
 
    if(debug > 0)
@@ -1024,6 +1037,7 @@ int setup_scan_header(SCN_HEADER **oscn_header, IMG_DAT *img_dat,
 /******************************************/
 int read_scan_header(SCN_HEADER **oscn_header, FILE *infp)
 {
+   int debug = -1;
    int ret, i;
    unsigned short Ls;
    SCN_HEADER *scn_header;
@@ -1106,6 +1120,7 @@ int read_scan_header(SCN_HEADER **oscn_header, FILE *infp)
 int getc_scan_header(SCN_HEADER **oscn_header, unsigned char **cbufptr,
          unsigned char *ebufptr)
 {
+   int debug = -1;
    int ret, i;
    unsigned short Ls;
    SCN_HEADER *scn_header;
@@ -1187,6 +1202,7 @@ int getc_scan_header(SCN_HEADER **oscn_header, unsigned char **cbufptr,
 /*********************************************/
 int write_scan_header(SCN_HEADER *scn_header, FILE *outfp)
 {
+   int debug = -1;
    int i, ret;
 
    if(debug > 0)
@@ -1247,6 +1263,7 @@ int write_scan_header(SCN_HEADER *scn_header, FILE *outfp)
 int putc_scan_header(SCN_HEADER *scn_header, unsigned char *outbuf,
                      const int outalloc, int *outlen)
 {
+   int debug = -1;
    int i, ret;
 
    if(debug > 0)
@@ -1309,6 +1326,7 @@ int read_comment(
    unsigned char **ocomment,
    FILE *infp)            /* input file */
 {
+   int debug = -1;
    int ret, cs;
    unsigned short hdr_size;              /* header size */
    unsigned char *comment;
@@ -1361,6 +1379,7 @@ int getc_comment(
    int ret, cs;
    unsigned short hdr_size;              /* header size */
    unsigned char *comment;
+   int debug = -1;
 
    if(debug > 0)
       fprintf(stderr, "Reading Comment Field.\n");
@@ -1406,6 +1425,7 @@ int write_comment(
 {
    int ret;
    unsigned short hdr_size;              /* header size */
+   int debug = -1;
 
    if(debug > 0)
       fprintf(stderr, "Writing Comment Field.\n");
@@ -1444,6 +1464,7 @@ int putc_comment(
 {
    int ret, i;
    unsigned short hdr_size;              /* header size */
+   int debug = -1;
 
    if(debug > 0)
       fprintf(stderr, "Writing Comment Field to Buffer.\n");
