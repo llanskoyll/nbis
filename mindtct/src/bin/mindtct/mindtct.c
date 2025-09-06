@@ -72,6 +72,8 @@ of the software.
 #include <imgboost.h>
 #include <img_io.h>
 #include <version.h>
+#include <omp.h>
+
 void procargs(int, char **, int *, int *, char **, char **);
 
 int debug = 0;
@@ -80,6 +82,9 @@ int debug = 0;
 **************************************************************************/
 int main(int argc, char *argv[])
 {
+   int tid = omp_get_thread_num();
+   (void)tid;
+
    int boostflag, m1flag;
    char *ifile, *oroot, ofile[MAXPATHLEN];
    unsigned char *idata, *bdata;
