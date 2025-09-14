@@ -66,7 +66,6 @@ of the software.
 
 #include <stdio.h>
 #include <an2k.h>
-#include <omp.h>
 
 /*************************************************************************
 **************************************************************************
@@ -82,9 +81,6 @@ of the software.
 **************************************************************************/
 int is_ANSI_NIST_file(const char *const ifile)
 {
-   int tid = omp_get_num_threads();
-   printf("Thread %d: is_ANSI_NIST_file\n", tid);
-
    FILE *fp;
    int ret, n;
    unsigned char buffer[(2 * FIELD_NUM_LEN) + 3], *cbufptr, *ebufptr;
@@ -118,7 +114,6 @@ int is_ANSI_NIST_file(const char *const ifile)
    /* if field ID successfully parsed ...*/
    if(ret == TRUE){
       if((record_type == TYPE_1_ID) && (field_int == LEN_ID)){
-         free(field_id);
          return(TRUE);
       }
    }

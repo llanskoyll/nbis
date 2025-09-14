@@ -2247,28 +2247,20 @@ int scan_ANSI_NIST_field_ID(AN2KBDB *buf, char **ofield_id,
       FALSE      - unsuccessful completion
       Negative   - system error
 ************************************************************************/
+#define FIELD_ID_BYTES 21
+
 int parse_ANSI_NIST_field_ID(unsigned char **oibufptr, unsigned char *ebufptr,
        char **ofield_id, unsigned int *orecord_type, unsigned int *ofield_int)
 {
-   char *field_id, *iptr, *rptr, *fptr;
+   char field_id[FIELD_ID_BYTES];
+
+   char *iptr, *rptr, *fptr;
    unsigned char *cptr;
    int nextchar;
    unsigned int record_type = 0, field_int = 0;
-   int field_id_bytes;
    int i, sep_found;
 
-   /* Allocate maximum size field ID as twice the max number of characters  */
-   /* for the field_int + 2 characters for the '.' and ':' */
-   /* + 1 for the NULL terminator. */
-   field_id_bytes = (2 * FIELD_NUM_LEN) + 3;
-
-   /* Use calloc so that ID buffer is set to all zeros (NULL). */
-   field_id = (char *)calloc((size_t)field_id_bytes, 1);
-   if(field_id == NULL){
-      fprintf(stderr, "ERROR : parse_ANSI_NIST_field_ID : "
-	      "calloc field_id (%d bytes)\n", field_id_bytes);
-      return(-2);
-   }
+   memset(field_id, 0, FIELD_ID_BYTES);
 
    i = 0;
    cptr = *oibufptr;
@@ -2282,7 +2274,6 @@ int parse_ANSI_NIST_field_ID(unsigned char **oibufptr, unsigned char *ebufptr,
 
       /* If EOB, then done & unsuccessful ... */
       if(cptr >= ebufptr){
-         free(field_id);
          return(FALSE);
       }
       nextchar = *cptr;
@@ -2305,15 +2296,11 @@ int parse_ANSI_NIST_field_ID(unsigned char **oibufptr, unsigned char *ebufptr,
       if((nextchar >= '0') && (nextchar <= '9'))
          *iptr++ = nextchar;
       else{
-         /* Not numeric text, so not a field_id, so done & unsuccessful */
-         free(field_id);
          return(FALSE);
       }
    }
 
    if(sep_found == 0){
-      /* then not a field_id, so done & unsuccessful */
-      free(field_id);
       return(FALSE);
    }
 
@@ -2325,7 +2312,6 @@ int parse_ANSI_NIST_field_ID(unsigned char **oibufptr, unsigned char *ebufptr,
    while(i < FIELD_NUM_LEN+1){
       /* If EOB, then done & unsuccessful ... */
       if(cptr >= ebufptr){
-         free(field_id);
          return(FALSE);
       }
       nextchar = *cptr++;
@@ -2348,15 +2334,11 @@ int parse_ANSI_NIST_field_ID(unsigned char **oibufptr, unsigned char *ebufptr,
       if((nextchar >= '0') && (nextchar <= '9'))
          *iptr++ = nextchar;
       else{
-         /* Not numeric text, so not a field_id, so done & unsuccessful */
-         free(field_id);
          return(FALSE);
       }
    }
 
    if(sep_found == 0){
-      /* then not a field_id, so done & unsuccessful */
-      free(field_id);
       return(FALSE);
    }
 

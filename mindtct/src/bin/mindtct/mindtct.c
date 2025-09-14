@@ -82,9 +82,6 @@ int debug = 0;
 **************************************************************************/
 int main(int argc, char *argv[])
 {
-   int tid = omp_get_thread_num();
-   (void)tid;
-
    int boostflag, m1flag;
    char *ifile, *oroot, ofile[MAXPATHLEN];
    unsigned char *idata, *bdata;
