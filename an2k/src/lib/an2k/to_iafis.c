@@ -273,9 +273,6 @@ int nist2iafis_fingerprint(RECORD **oimgrecord, RECORD *imgrecord)
    /* {4,6}.001: LEN Field */
    /* Locate LEN field in input record. */
    if(!lookup_ANSI_NIST_field(&field, &field_i, LEN_ID, imgrecord)){
-      fprintf(stderr, "ERROR : nist2iafis_fingerprint : "
-	      "LEN field not found in input record [Type-%d.%03d]\n",
-	      imgrecord->type, LEN_ID);
       free_ANSI_NIST_record(nimgrecord);
       return(-6);
    }
@@ -743,8 +740,6 @@ int nist2iafis_type_9(RECORD **otype_9, ANSI_NIST *ansi_nist,
    /* 9.001: LEN Field */
    /* Locate LEN field in input record. */
    if(!lookup_ANSI_NIST_field(&field, &field_i, LEN_ID, type_9)){
-      fprintf(stderr, "ERROR : nist2iafis_type_9 : "
-	      "LEN field not found in input record [Type-9.%03d]\n", LEN_ID);
       free_ANSI_NIST_record(ntype_9);
       return(-4);
    }

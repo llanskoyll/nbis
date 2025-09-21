@@ -267,9 +267,6 @@ int insert_ANSI_NIST_record(const int record_i, const char *insfile,
    if (ret < 0)
       return ret;
 
-   fprintf(stderr, "Inserted record index [%d] [Type-%d] with contents of %s\n",
-           record_i+1, ansi_nist->records[record_i]->type, insfile);
-
    /* Return normally. */
    return(0);
 }
@@ -303,10 +300,6 @@ int insert_ANSI_NIST_record_frmem(const int record_i, RECORD *record,
    if ((ret = insert_ANSI_NIST_record_core(record_i, record,
 					   FALSE, ansi_nist)) < 0)
       return ret;
-
-   fprintf(stderr, "Inserted record index [%d] [Type-%d]\n",
-           record_i+1, ansi_nist->records[record_i]->type);
-
    /* Return normally. */
    return 0;
 }
@@ -431,9 +424,6 @@ int adjust_insrec_CNT_IDCs(const int record_i, const int new_idc,
    int j, k, maxv, byte_adjust;
    char numstr[FIELD_NUM_LEN+1];
 
-   /* Need to adjust Type-1 CNT 1.3 field ... */
-   fprintf(stderr, "Updating CNT field [Type-1.%03d]\n", CNT_ID);
-   
    /* If Type-1 record not found ... */
    /* Type-1 record must be first in record list ... */
    if((ansi_nist->num_records <= 0) ||
@@ -1352,10 +1342,6 @@ int insert_ANSI_NIST_item(const int record_i, const int field_i,
    /* Update the current record's length field. */
    if((ret = update_ANSI_NIST_record_LEN(ansi_nist, record_i)))
       return(ret);
-
-   fprintf(stderr, "Inserted item index [%d.%d.%d.%d] [Type-%d.%03d] = %s\n",
-           record_i+1, field_i+1, subfield_i+1, item_i+1,
-           record->type, field->field_int, item->value);
 
    /* Return normally. */
    return(0);

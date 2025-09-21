@@ -720,11 +720,6 @@ int substitute_ANSI_NIST_item(const int record_i, const int field_i,
          item->alloc_chars = newalloc;
       }
 
-      fprintf(stderr, "Substituted item index [%d.%d.%d.%d] [Type-%d.%03d]\n"
-	      "   Old value = %s\n",
-              record_i+1, field_i+1, subfield_i+1, item_i+1,
-              record->type, field->field_int, item->value);
-
       /* Assign new value into item, and reset attributes. */
       strcpy((char *)item->value, newvalue);
       item->num_chars = strlen((char *)item->value);
@@ -737,8 +732,6 @@ int substitute_ANSI_NIST_item(const int record_i, const int field_i,
       if(item->us_char)
          /* Include separator in item's byte size. */
          item->num_bytes++;
-
-      fprintf(stderr, "   New value = %s\n", item->value);
 
       /* If byte size of tagged field item has changed ... */
       /* Binary fields (other than the bnary image/data field handled above) */

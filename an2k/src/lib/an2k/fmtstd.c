@@ -241,9 +241,6 @@ static int i_read_ANSI_NIST_binary_signature_record(FILE *fpin, AN2KBDB *buf,
    /* Read the LEN field ... */
    if((ret = i_read_ANSI_NIST_binary_field(fpin, buf, &field,
        BINARY_LEN_BYTES)) != 0){
-      fprintf(stderr, "ERROR : read_ANSI_NIST_binary_signature_record : "
-	      "LEN field index [%d] not read in record [Type-%d]\n",
-              record->num_fields+1, record_type);
       return(-2);
    }
    /* Set field attributes. */
@@ -506,9 +503,6 @@ static int i_read_ANSI_NIST_binary_image_record(FILE *fpin, AN2KBDB *buf,
    /* Read the LEN field ... */
    if((ret = i_read_ANSI_NIST_binary_field(fpin, buf, &field,
       BINARY_LEN_BYTES)) != 0){
-      fprintf(stderr, "ERROR : read_ANSI_NIST_binary_image_record : "
-	      "LEN field index [%d] not read in record [Type-%d]\n",
-              record->num_fields+1, record_type);
       return(-2);
    }
    /* Set field attributes. */
@@ -1704,27 +1698,17 @@ static int i_read_ANSI_NIST_remaining_records(FILE *fpin, AN2KBDB *buf,
       return(-4);
    }
 
-   /* The number of subfields is the number of records in the file. */
    num_records = cntfield->num_subfields;
 
-   /* Already read Type-1 record (perhaps more), so skip any already */
-   /* read and begin parsing remaining records.                      */
    for(i = ansi_nist->num_records; i < num_records; i++){
       if(cntfield->subfields[i]->num_items != 2){
-         fprintf(stderr, "ERROR : read_ANSI_NIST_remaining_records : "
-		 "Type-1 CNT Field (1.003) Subfield %d bad format: "
-		 "number of items %d, not 2 as required\n",
-		 i, cntfield->subfields[i]->num_items);
          return(-5);
       }
-      /* Get integer type of current record. */
       record_type = atoi((char *)cntfield->subfields[i]->items[0]->value);
 
-      /* Parse in the next record from the file with this type. */
       if((ret = i_read_ANSI_NIST_record(fpin, buf, &record, record_type)) != 0)
          return(ret);
 
-      /* Add the new record to the ANSI/NIST structure. */
       if((ret = update_ANSI_NIST(ansi_nist, record)) != 0){
          free_ANSI_NIST_record(record);
          return(ret);

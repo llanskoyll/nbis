@@ -351,9 +351,6 @@ int update_ANSI_NIST_record_LEN(ANSI_NIST *ansi_nist, const int record_i)
    /* If LEN subfield or item not found ... */
    if((lenfield->num_subfields != 1) ||
       (lenfield->subfields[0]->num_items != 1)){
-      fprintf(stderr, "ERROR : update_ANSI_NIST_record_LEN : "
-	      "LEN field index [%d.%d] format error in record [Type-%d.%03d]\n",
-              record_i+1, lenfield_i+1, record->type, lenfield->field_int);
       return(-4);
    }
 
@@ -369,11 +366,6 @@ int update_ANSI_NIST_record_LEN(ANSI_NIST *ansi_nist, const int record_i)
          if((ret = update_ANSI_NIST_binary_record_LEN(record)))
             return(ret);
 
-         fprintf(stderr, "LEN field index [%d.%d] [Type-%d.%03d] updated "
-		 "(%d now %d)\n",
-                 record_i+1, lenfield_i+1, record->type, lenfield->field_int,
-		 orig_recordlen, record->num_bytes);
-
          /* Return normally. */
          return(0);
       }
@@ -383,12 +375,6 @@ int update_ANSI_NIST_record_LEN(ANSI_NIST *ansi_nist, const int record_i)
          return(ret);
 
       ansi_nist->num_bytes += (record->num_bytes - orig_recordlen);
-
-      fprintf(stderr, "LEN field index [%d.%d] [Type-%d.%03d] updated "
-	      "(%d now %d)\n",
-              record_i+1, lenfield_i+1, record->type, lenfield->field_int,
-	      orig_recordlen, record->num_bytes);
-
    }
    /* Return normally. */
    return(0);

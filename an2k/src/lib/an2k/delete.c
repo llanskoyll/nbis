@@ -302,9 +302,6 @@ int adjust_delrec_CNT_IDCs(const int record_i, ANSI_NIST *ansi_nist)
    int cntfield_i, idcfield_i;
    int itemint, delidc;
 
-   /* Need to adjust Type-1 CNT 1.3 field, so look up Type-1 record. */
-   fprintf(stderr, "Updating CNT field [Type-1.%03d]\n", CNT_ID);
-
    /* If Type-1 record not found ... */
    /* Type-1 record must be first in record list ... */
    if((ansi_nist->num_records <= 0) ||
