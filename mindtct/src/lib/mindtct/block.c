@@ -102,102 +102,30 @@ of the software.
 int block_offsets(int **optr, int *ow, int *oh,
           const int iw, const int ih, const int pad, const int blocksize)
 {
-   int *blkoffs, bx, by, bw, bh, bi, bsize;
-   int blkrow_start, blkrow_size, offset;
-   int lastbw, lastbh;
-   int pad2, pw, ph;
+   int pw = iw + 2 * pad;
+   int ph = ih + 2 * pad;
+   int bw = (iw + blocksize - 1) / blocksize;
+   int bh = (ih + blocksize - 1) / blocksize;
+   int *blkoffs = (int *)malloc(bw * bh * sizeof(int));
+   if(!blkoffs) return -1;
 
-   /* Test if unpadded image is smaller than a single block */
-   if((iw < blocksize) || (ih < blocksize)){
-      fprintf(stderr,
-         "ERROR : block_offsets : image must be at least %d by %d in size\n",
-              blocksize, blocksize);
-      return(-80);
-   }
-
-   /* Compute padded width and height of image */
-   pad2 = pad<<1;
-   pw = iw + pad2;
-   ph = ih + pad2;
-
-   /* Compute the number of columns and rows of blocks in the image. */
-   /* Take the ceiling to account for "leftovers" at the right and   */
-   /* bottom of the unpadded image */
-   bw = (int)ceil(iw / (double)blocksize);
-   bh = (int)ceil(ih / (double)blocksize);
-
-   /* Total number of blocks in the image */
-   bsize = bw*bh;
-
-   /* The index of the last column */
-   lastbw = bw - 1;
-   /* The index of the last row */
-   lastbh = bh - 1;
-
-   /* Allocate list of block offsets */
-   blkoffs = (int *)malloc(bsize * sizeof(int));
-   if(blkoffs == (int *)NULL){
-      fprintf(stderr, "ERROR : block_offsets : malloc : blkoffs\n");
-      return(-81);
-   }
-
-   /* Current block index */
-   bi = 0;
-
-   /* Current offset from top of padded image to start of new row of  */
-   /* unpadded image blocks. It is initialize to account for the      */
-   /* padding and will always be indented the size of the padding     */
-   /* from the left edge of the padded image.                         */
-   blkrow_start = (pad * pw) + pad;
-
-   /* Number of pixels in a row of blocks in the padded image */
-   blkrow_size = pw * blocksize;  /* row width X block height */
-
-   /* Foreach non-overlapping row of blocks in the image */
-   for(by = 0; by < lastbh; by++){
-      /* Current offset from top of padded image to beginning of */
-      /* the next block */
-      offset = blkrow_start;
-      /* Foreach non-overlapping column of blocks in the image */
-      for(bx = 0; bx < lastbw; bx++){
-         /* Store current block offset */
-         blkoffs[bi++] = offset;
-         /* Bump to the beginning of the next block */
-         offset += blocksize;
+   int bi = 0;
+   int by;
+   int bx;
+   for (by = 0; by < bh; by++) {
+      int y_off = pad + by * blocksize;
+      if(y_off + blocksize > ih + pad) y_off = ih + pad - blocksize;
+      for (bx = 0; bx < bw; bx++) {
+         int x_off = pad + bx * blocksize;
+         if(x_off + blocksize > iw + pad) x_off = iw + pad - blocksize;
+         blkoffs[bi++] = y_off * pw + x_off;
       }
-
-      /* Compute and store "left-over" block in row.    */
-      /* This is the block in the last column of row.   */
-      /* Start at far right edge of unpadded image data */
-      /* and come in BLOCKSIZE pixels.                  */
-      blkoffs[bi++] = blkrow_start + iw - blocksize;
-      /* Bump to beginning of next row of blocks */
-      blkrow_start += blkrow_size;
    }
-
-   /* Compute and store "left-over" row of blocks at bottom of image */
-   /* Start at bottom edge of unpadded image data and come up        */
-   /* BLOCKSIZE pixels. This too must account for padding.           */
-   blkrow_start = ((pad + ih - blocksize) * pw) + pad;
-   /* Start the block offset for the last row at this point */
-   offset = blkrow_start;
-   /* Foreach non-overlapping column of blocks in last row of the image */
-   for(bx = 0; bx < lastbw; bx++){
-      /* Store current block offset */
-      blkoffs[bi++] = offset;
-      /* Bump to the beginning of the next block */
-      offset += blocksize;
-   }
-
-   /* Compute and store last "left-over" block in last row.      */
-   /* Start at right edge of unpadded image data and come in     */
-   /* BLOCKSIZE pixels.                                          */
-   blkoffs[bi++] = blkrow_start + iw - blocksize;
 
    *optr = blkoffs;
    *ow = bw;
    *oh = bh;
-   return(0);
+   return (0);
 }
 
 /*************************************************************************
