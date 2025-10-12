@@ -64,8 +64,9 @@ define make-depend
 	@$(MV) $3.tmp $3
 endef
 #
-$(INSTALL_BIN_DIR)/$(PROGRAM): $(OBJFILES) $(LIBS)
-	$(CC) $(LDFLAGS) $(OBJFILES) $(LIBS) $(EXT_LIBS) -o $(INSTALL_BIN_DIR)/$(PROGRAM)
+#
+$(INSTALL_BIN_DIR)/$(PROGRAM): $(OBJFILES) $(LIBS) 
+	$(CC) $(LDFLAGS) $(OBJFILES) $(LIBS) $(EXT_LIBS) -L/usr/lib/x86_64-linux-gnu -lfftw3 -ldl -o $(INSTALL_BIN_DIR)/$(PROGRAM)
 #
 config:
 	@for depfile in $(DEPFILES); do \
