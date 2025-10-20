@@ -99,16 +99,16 @@ of the software.
       Zero     - successful completion
       Negative - system error
 **************************************************************************/
+#include <fft.h>
 int dft_dir_powers(double **powers, unsigned char *pdata,
                const int blkoffset, const int pw, const int ph,
-               const DFTWAVES *dftwaves, const ROTGRIDS *dftgrids)
+               const DFTWAVES *dftwaves, const ROTGRIDS *dftgrids,
+               FFT_Workspace *fftw)
 {
    int w, dir;
    int *rowsums;
    unsigned char *blkptr;
 
-   /* Allocate line sum vector, and initialize to zeros */
-   /* This routine requires square block (grid), so ERROR otherwise. */
    if(dftgrids->grid_w != dftgrids->grid_h){
       fprintf(stderr, "ERROR : dft_dir_powers : DFT grids must be square\n");
       return(-90);
@@ -119,21 +119,15 @@ int dft_dir_powers(double **powers, unsigned char *pdata,
       return(-91);
    }
 
-   /* Foreach direction ... */
    for(dir = 0; dir < dftgrids->ngrids; dir++){
-      /* Compute vector of line sums from rotated grid */
       blkptr = pdata + blkoffset;
       sum_rot_block_rows(rowsums, blkptr,
                          dftgrids->grids[dir], dftgrids->grid_w);
-
-      /* Foreach DFT wave ... */
       for(w = 0; w < dftwaves->nwaves; w++){
          dft_power(&(powers[w][dir]), rowsums,
-                   dftwaves->waves[w], dftwaves->wavelen);
+                   dftwaves->waves[w], dftwaves->wavelen, fftw);
       }
    }
-
-   /* Deallocate working memory. */
    free(rowsums);
 
    return(0);
@@ -196,25 +190,20 @@ void sum_rot_block_rows(int *rowsums, const unsigned char *blkptr,
                 given orientation within the image block
 **************************************************************************/
 void dft_power(double *power, const int *rowsums,
-               const DFTWAVE *wave, const int wavelen)
+               const DFTWAVE *wave, const int wavelen, FFT_Workspace *fftw)
 {
-   int i;
-   double cospart, sinpart;
+   int i, k;
+   double re, im;
+   if (!fftw || !wave || wavelen <= 0) return;
+   for (i = 0; i < wavelen; i++)
+      fftw->in[i] = (double)rowsums[i];
 
-   /* Initialize accumulators */
-   cospart = 0.0;
-   sinpart = 0.0;
+   fftw_execute(fftw->plan);
+   k = wave->wave_idx;
+   re = fftw->out[k][0];
+   im = fftw->out[k][1];
 
-   /* Accumulate cos and sin components of DFT. */
-   for(i = 0; i < wavelen; i++){
-      /* Multiply each rotated row sum by its        */
-      /* corresponding cos or sin point in DFT wave. */
-      cospart += (rowsums[i] * wave->cos[i]);
-      sinpart += (rowsums[i] * wave->sin[i]);
-   }
-
-   /* Power is the sum of the squared cos and sin components */
-   *power = (cospart * cospart) + (sinpart * sinpart);
+   *power = re * re + im * im;
 }
 
 /*************************************************************************

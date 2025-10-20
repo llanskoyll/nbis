@@ -245,7 +245,8 @@ int init_dftwaves(DFTWAVES **optr, const double *dft_coefs,
       /* Assign pointer nicknames */
       cptr = dftwaves->waves[i]->cos;
       sptr = dftwaves->waves[i]->sin;
-
+      dftwaves->waves[i]->wave_idx = (int)(dft_coefs[i] * dftwaves->wavelen
+                                             / blocksize + 0.5);
       /* Compute actual frequency */
       freq = pi_factor * dft_coefs[i];
 

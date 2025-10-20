@@ -119,6 +119,7 @@ typedef struct dir2rad{
 typedef struct dftwave{
    double *cos;
    double *sin;
+   int wave_idx;
 } DFTWAVE;
 
 /* DFT wave forms structure containing all wave forms  */
@@ -800,12 +801,13 @@ extern int lfs_detect_minutiae_V2(MINUTIAE **,
                      const LFSPARMS *);
 
 /* dft.c */
+#include <fft.h>
 extern int dft_dir_powers(double **, unsigned char *, const int,
                      const int, const int, const DFTWAVES *,
-                     const ROTGRIDS *);
+                     const ROTGRIDS *, FFT_Workspace *);
 extern void sum_rot_block_rows(int *, const unsigned char *, const int *,
                      const int);
-extern void dft_power(double *, const int *, const DFTWAVE *, const int);
+extern void dft_power(double *, const int *, const DFTWAVE *, const int, FFT_Workspace *);
 extern int dft_power_stats(int *, double *, int *, double *, double **,
                      const int, const int, const int);
 extern void get_max_norm(double *, int *, double *, const double *, const int);

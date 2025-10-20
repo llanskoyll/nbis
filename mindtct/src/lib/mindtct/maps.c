@@ -262,20 +262,15 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
 
    print2log("INITIAL MAP\n");
 
-   /* Compute total number of blocks in map */
    bsize = mw * mh;
-
-   /* Allocate Direction Map memory */
    direction_map = (int *)malloc(bsize * sizeof(int));
    if(direction_map == (int *)NULL){
       fprintf(stderr,
               "ERROR : gen_initial_maps : malloc : direction_map\n");
       return(-550);
    }
-   /* Initialize the Direction Map to INVALID (-1). */
    memset(direction_map, INVALID_DIR, bsize * sizeof(int));
 
-   /* Allocate Low Contrast Map memory */
    low_contrast_map = (int *)malloc(bsize * sizeof(int));
    if(low_contrast_map == (int *)NULL){
       free(direction_map);
@@ -283,10 +278,8 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
               "ERROR : gen_initial_maps : malloc : low_contrast_map\n");
       return(-551);
    }
-   /* Initialize the Low Contrast Map to FALSE (0). */
    memset(low_contrast_map, 0, bsize * sizeof(int));
 
-   /* Allocate Low Ridge Flow Map memory */
    low_flow_map = (int *)malloc(bsize * sizeof(int));
    if(low_flow_map == (int *)NULL){
       free(direction_map);
@@ -295,21 +288,14 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
               "ERROR : gen_initial_maps : malloc : low_flow_map\n");
       return(-552);
    }
-   /* Initialize the Low Flow Map to FALSE (0). */
    memset(low_flow_map, 0, bsize * sizeof(int));
 
-   /* Allocate DFT directional power vectors */
    if((ret = alloc_dir_powers(&powers, dftwaves->nwaves, dftgrids->ngrids))){
-      /* Free memory allocated to this point. */
       free(direction_map);
       free(low_contrast_map);
       free(low_flow_map);
       return(ret);
    }
-
-   /* Allocate DFT power statistic arrays */
-   /* Compute length of statistics arrays.  Statistics not needed   */
-   /* for the first DFT wave, so the length is number of waves - 1. */
    nstats = dftwaves->nwaves - 1;
    if((ret = alloc_power_stats(&wis, &powmaxs, &powmax_dirs,
                             &pownorms, nstats))){
@@ -321,26 +307,22 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
       return(ret);
    }
 
-   /* Compute special window origin limits for determining low contrast.  */
-   /* These pixel limits avoid analyzing the padded borders of the image. */
    xminlimit = dftgrids->pad;
    yminlimit = dftgrids->pad;
    xmaxlimit = pw - dftgrids->pad - lfsparms->windowsize - 1;
    ymaxlimit = ph - dftgrids->pad - lfsparms->windowsize - 1;
 
-   /* Foreach block in image ... */
+   FFT_Workspace fftw;
+   fftw.in = fftw_alloc_real(dftwaves->wavelen);
+   fftw.out = fftw_alloc_complex(dftwaves->wavelen);
+   fftw.plan = fftw_plan_dft_r2c_1d(dftwaves->wavelen, fftw.in, fftw.out, FFTW_ESTIMATE);
+
    for(bi = 0; bi < bsize; bi++){
-      /* Adjust block offset from pointing to block origin to pointing */
-      /* to surrounding window origin.                                 */
       dft_offset = blkoffs[bi] - (lfsparms->windowoffset * pw) -
                       lfsparms->windowoffset;
 
-      /* Compute pixel coords of window origin. */
       win_x = dft_offset % pw;
       win_y = (int)(dft_offset / pw);
-
-      /* Make sure the current window does not access padded image pixels */
-      /* for analyzing low contrast.                                      */
       win_x = max(xminlimit, win_x);
       win_x = min(xmaxlimit, win_x);
       win_y = max(yminlimit, win_y);
@@ -349,10 +331,8 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
 
       print2log("   BLOCK %2d (%2d, %2d) ", bi, bi%mw, bi/mw);
 
-      /* If block is low contrast ... */
       if((ret = low_contrast_block(low_contrast_offset, lfsparms->windowsize,
                                   pdata, pw, ph, lfsparms))){
-         /* If system error ... */
          if(ret < 0){
             free(direction_map);
             free(low_contrast_map);
@@ -362,22 +342,18 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
             free(powmaxs);
             free(powmax_dirs);
             free(pownorms);
+            free_fft(&fftw);
             return(ret);
          }
 
-         /* Otherwise, block is low contrast ... */
          print2log("LOW CONTRAST\n");
          low_contrast_map[bi] = TRUE;
-         /* Direction Map's block is already set to INVALID. */
       }
-      /* Otherwise, sufficient contrast for DFT processing ... */
       else {
          print2log("\n");
 
-         /* Compute DFT powers */
          if((ret = dft_dir_powers(powers, pdata, low_contrast_offset, pw, ph,
-                               dftwaves, dftgrids))){
-            /* Free memory allocated to this point. */
+                               dftwaves, dftgrids, &fftw))){
             free(direction_map);
             free(low_contrast_map);
             free(low_flow_map);
@@ -386,15 +362,11 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
             free(powmaxs);
             free(powmax_dirs);
             free(pownorms);
+            free_fft(&fftw);
             return(ret);
          }
-
-         /* Compute DFT power statistics, skipping first applied DFT  */
-         /* wave.  This is dependent on how the primary and secondary */
-         /* direction tests work below.                               */
          if((ret = dft_power_stats(wis, powmaxs, powmax_dirs, pownorms, powers,
                                 1, dftwaves->nwaves, dftgrids->ngrids))){
-            /* Free memory allocated to this point. */
             free(direction_map);
             free(low_contrast_map);
             free(low_flow_map);
@@ -403,6 +375,7 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
             free(powmaxs);
             free(powmax_dirs);
             free(pownorms);
+            free_fft(&fftw);
             return(ret);
          }
 
@@ -446,6 +419,8 @@ int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
    free(powmaxs);
    free(powmax_dirs);
    free(pownorms);
+   free_fft(&fftw);
+
 
    *odmap = direction_map;
    *olcmap = low_contrast_map;
@@ -1045,6 +1020,8 @@ int gen_imap(int **optr, int *ow, int *oh,
       Zero     - successful completion
       Negative - system error
 **************************************************************************/
+#include <fft.h>
+#include <fftw3.h>
 int gen_initial_imap(int **optr, int *blkoffs, const int mw, const int mh,
                 unsigned char *pdata, const int pw, const int ph,
                 const DFTWAVES *dftwaves, const  ROTGRIDS *dftgrids,
@@ -1091,6 +1068,11 @@ int gen_initial_imap(int **optr, int *blkoffs, const int mw, const int mh,
    /* Initialize the imap to -1 */
    memset(imap, INVALID_DIR, bsize * sizeof(int));
 
+   FFT_Workspace fftw;
+   fftw.in = fftw_alloc_real(dftwaves->wavelen);
+   fftw.out = fftw_alloc_complex(dftwaves->wavelen/2 + 1);
+   fftw.plan = fftw_plan_dft_r2c_1d(dftwaves->wavelen, fftw.in, fftw.out, FFTW_ESTIMATE);
+
    /* Foreach block in imap ... */
    for(bi = 0; bi < bsize; bi++){
 
@@ -1098,7 +1080,7 @@ int gen_initial_imap(int **optr, int *blkoffs, const int mw, const int mh,
 
       /* Compute DFT powers */
       if((ret = dft_dir_powers(powers, pdata, blkoffs[bi], pw, ph,
-                            dftwaves, dftgrids))){
+                            dftwaves, dftgrids, &fftw))){
          /* Free memory allocated to this point. */
          free(imap);
          free_dir_powers(powers, dftwaves->nwaves);
@@ -1106,6 +1088,7 @@ int gen_initial_imap(int **optr, int *blkoffs, const int mw, const int mh,
          free(powmaxs);
          free(powmax_dirs);
          free(pownorms);
+         free_fft(&fftw);
          return(ret);
       }
 
@@ -1121,6 +1104,7 @@ int gen_initial_imap(int **optr, int *blkoffs, const int mw, const int mh,
          free(powmaxs);
          free(powmax_dirs);
          free(pownorms);
+         free_fft(&fftw);
          return(ret);
       }
 
@@ -1161,6 +1145,7 @@ int gen_initial_imap(int **optr, int *blkoffs, const int mw, const int mh,
    free(powmaxs);
    free(powmax_dirs);
    free(pownorms);
+   free_fft(&fftw);
 
    *optr = imap;
    return(0);
