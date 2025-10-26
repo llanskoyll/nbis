@@ -199,22 +199,15 @@ void dft_power(double *power, const int *rowsums,
                const DFTWAVE *wave, const int wavelen)
 {
    int i;
-   double cospart, sinpart;
+   double cospart = 0.0;
+   double sinpart = 0.0;
 
-   /* Initialize accumulators */
-   cospart = 0.0;
-   sinpart = 0.0;
-
-   /* Accumulate cos and sin components of DFT. */
-   for(i = 0; i < wavelen; i++){
-      /* Multiply each rotated row sum by its        */
-      /* corresponding cos or sin point in DFT wave. */
-      cospart += (rowsums[i] * wave->cos[i]);
-      sinpart += (rowsums[i] * wave->sin[i]);
+   for (i = 0; i < wavelen; i++) {
+      cospart += rowsums[i] * wave->cos[i];
+      sinpart += rowsums[i] * wave->sin[i];
    }
 
-   /* Power is the sum of the squared cos and sin components */
-   *power = (cospart * cospart) + (sinpart * sinpart);
+   *power = cospart * cospart + sinpart * sinpart;
 }
 
 /*************************************************************************

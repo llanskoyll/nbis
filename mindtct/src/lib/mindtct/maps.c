@@ -244,213 +244,129 @@ int gen_image_maps(int **odmap, int **olcmap, int **olfmap, int **ohcmap,
       Zero     - successful completion
       Negative - system error
 **************************************************************************/
+#include <omp.h>
 int gen_initial_maps(int **odmap, int **olcmap, int **olfmap,
                 int *blkoffs, const int mw, const int mh,
                 unsigned char *pdata, const int pw, const int ph,
                 const DFTWAVES *dftwaves, const  ROTGRIDS *dftgrids,
                 const LFSPARMS *lfsparms)
 {
-   int *direction_map, *low_contrast_map, *low_flow_map;
-   int bi, bsize, blkdir;
-   int *wis, *powmax_dirs;
-   double **powers, *powmaxs, *pownorms;
-   int nstats;
-   int ret; /* return code */
-   int dft_offset;
-   int xminlimit, xmaxlimit, yminlimit, ymaxlimit;
-   int win_x, win_y, low_contrast_offset;
+   int *direction_map = NULL, *low_contrast_map = NULL, *low_flow_map = NULL;
+   int bsize = mw * mh;
+   int ret = 0;
 
-   print2log("INITIAL MAP\n");
-
-   /* Compute total number of blocks in map */
-   bsize = mw * mh;
-
-   /* Allocate Direction Map memory */
    direction_map = (int *)malloc(bsize * sizeof(int));
-   if(direction_map == (int *)NULL){
-      fprintf(stderr,
-              "ERROR : gen_initial_maps : malloc : direction_map\n");
-      return(-550);
-   }
-   /* Initialize the Direction Map to INVALID (-1). */
-   memset(direction_map, INVALID_DIR, bsize * sizeof(int));
-
-   /* Allocate Low Contrast Map memory */
    low_contrast_map = (int *)malloc(bsize * sizeof(int));
-   if(low_contrast_map == (int *)NULL){
-      free(direction_map);
-      fprintf(stderr,
-              "ERROR : gen_initial_maps : malloc : low_contrast_map\n");
-      return(-551);
-   }
-   /* Initialize the Low Contrast Map to FALSE (0). */
-   memset(low_contrast_map, 0, bsize * sizeof(int));
-
-   /* Allocate Low Ridge Flow Map memory */
    low_flow_map = (int *)malloc(bsize * sizeof(int));
-   if(low_flow_map == (int *)NULL){
-      free(direction_map);
-      free(low_contrast_map);
-      fprintf(stderr,
-              "ERROR : gen_initial_maps : malloc : low_flow_map\n");
-      return(-552);
+   if(!direction_map || !low_contrast_map || !low_flow_map){
+       fprintf(stderr, "ERROR: malloc maps\n");
+       free(direction_map); free(low_contrast_map); free(low_flow_map);
+       return -1;
    }
-   /* Initialize the Low Flow Map to FALSE (0). */
+   memset(direction_map, INVALID_DIR, bsize * sizeof(int));
+   memset(low_contrast_map, 0, bsize * sizeof(int));
    memset(low_flow_map, 0, bsize * sizeof(int));
 
-   /* Allocate DFT directional power vectors */
-   if((ret = alloc_dir_powers(&powers, dftwaves->nwaves, dftgrids->ngrids))){
-      /* Free memory allocated to this point. */
-      free(direction_map);
-      free(low_contrast_map);
-      free(low_flow_map);
-      return(ret);
+   int nthreads = omp_get_max_threads();
+
+   double ***powers_thr = (double ***)calloc(nthreads, sizeof(double**));
+   int **wis_thr = (int **)calloc(nthreads, sizeof(int*));
+   double **powmaxs_thr = (double **)calloc(nthreads, sizeof(double*));
+   int **powmax_dirs_thr = (int **)calloc(nthreads, sizeof(int*));
+   double **pownorms_thr = (double **)calloc(nthreads, sizeof(double*));
+   if(!powers_thr || !wis_thr || !powmaxs_thr || !powmax_dirs_thr || !pownorms_thr){
+       fprintf(stderr, "ERROR: calloc per-thread buffers\n");
+       ret = -1; goto cleanup_maps;
    }
 
-   /* Allocate DFT power statistic arrays */
-   /* Compute length of statistics arrays.  Statistics not needed   */
-   /* for the first DFT wave, so the length is number of waves - 1. */
-   nstats = dftwaves->nwaves - 1;
-   if((ret = alloc_power_stats(&wis, &powmaxs, &powmax_dirs,
-                            &pownorms, nstats))){
-      /* Free memory allocated to this point. */
-      free(direction_map);
-      free(low_contrast_map);
-      free(low_flow_map);
-      free_dir_powers(powers, dftwaves->nwaves);
-      return(ret);
+   int nstats = dftwaves->nwaves - 1;
+   int t;
+   for(t = 0; t < nthreads; ++t){
+       ret = alloc_dir_powers(&powers_thr[t], dftwaves->nwaves, dftgrids->ngrids);
+       if(ret) { fprintf(stderr, "ERROR: alloc_dir_powers thread %d\n", t); goto cleanup_perthread; }
+
+       ret = alloc_power_stats(&wis_thr[t], &powmaxs_thr[t], &powmax_dirs_thr[t], &pownorms_thr[t], nstats);
+       if(ret) { fprintf(stderr, "ERROR: alloc_power_stats thread %d\n", t); goto cleanup_perthread; }
    }
 
-   /* Compute special window origin limits for determining low contrast.  */
-   /* These pixel limits avoid analyzing the padded borders of the image. */
-   xminlimit = dftgrids->pad;
-   yminlimit = dftgrids->pad;
-   xmaxlimit = pw - dftgrids->pad - lfsparms->windowsize - 1;
-   ymaxlimit = ph - dftgrids->pad - lfsparms->windowsize - 1;
+   int xminlimit = dftgrids->pad;
+   int yminlimit = dftgrids->pad;
+   int xmaxlimit = pw - dftgrids->pad - lfsparms->windowsize - 1;
+   int ymaxlimit = ph - dftgrids->pad - lfsparms->windowsize - 1;
 
-   /* Foreach block in image ... */
-   for(bi = 0; bi < bsize; bi++){
-      /* Adjust block offset from pointing to block origin to pointing */
-      /* to surrounding window origin.                                 */
-      dft_offset = blkoffs[bi] - (lfsparms->windowoffset * pw) -
-                      lfsparms->windowoffset;
+int bi;
 
-      /* Compute pixel coords of window origin. */
-      win_x = dft_offset % pw;
-      win_y = (int)(dft_offset / pw);
+#pragma omp parallel for default(none) \
+    shared(direction_map, low_contrast_map, low_flow_map, pdata, blkoffs, dftwaves, dftgrids, lfsparms, \
+           xminlimit, xmaxlimit, yminlimit, ymaxlimit, bsize, powers_thr, wis_thr, powmaxs_thr, \
+           powmax_dirs_thr, pownorms_thr, nstats) \
+    private(ret)
+   for (bi = 0; bi < bsize; ++bi) {
+      int tid = omp_get_thread_num();
+      double **powers_local = powers_thr[tid];
+      int *wis_local = wis_thr[tid];
+      double *powmaxs_local = powmaxs_thr[tid];
+      int *powmax_dirs_local = powmax_dirs_thr[tid];
+      double *pownorms_local = pownorms_thr[tid];
 
-      /* Make sure the current window does not access padded image pixels */
-      /* for analyzing low contrast.                                      */
-      win_x = max(xminlimit, win_x);
-      win_x = min(xmaxlimit, win_x);
-      win_y = max(yminlimit, win_y);
-      win_y = min(ymaxlimit, win_y);
-      low_contrast_offset = (win_y * pw) + win_x;
+      int dft_offset = blkoffs[bi] - (lfsparms->windowoffset * pw) - lfsparms->windowoffset;
+      int win_x = dft_offset % pw;
+      int win_y = dft_offset / pw;
+      if (win_x < xminlimit) win_x = xminlimit;
+      if (win_x > xmaxlimit) win_x = xmaxlimit;
+      if (win_y < yminlimit) win_y = yminlimit;
+      if (win_y > ymaxlimit) win_y = ymaxlimit;
+      int low_contrast_offset = win_y * pw + win_x;
 
-      print2log("   BLOCK %2d (%2d, %2d) ", bi, bi%mw, bi/mw);
-
-      /* If block is low contrast ... */
-      if((ret = low_contrast_block(low_contrast_offset, lfsparms->windowsize,
-                                  pdata, pw, ph, lfsparms))){
-         /* If system error ... */
-         if(ret < 0){
-            free(direction_map);
-            free(low_contrast_map);
-            free(low_flow_map);
-            free_dir_powers(powers, dftwaves->nwaves);
-            free(wis);
-            free(powmaxs);
-            free(powmax_dirs);
-            free(pownorms);
-            return(ret);
-         }
-
-         /* Otherwise, block is low contrast ... */
-         print2log("LOW CONTRAST\n");
+      ret = low_contrast_block(low_contrast_offset, lfsparms->windowsize, pdata, pw, ph, lfsparms);
+      if(ret < 0) continue;
+      if(ret) {
          low_contrast_map[bi] = TRUE;
-         /* Direction Map's block is already set to INVALID. */
+         continue;
       }
-      /* Otherwise, sufficient contrast for DFT processing ... */
+
+      ret = dft_dir_powers(powers_local, pdata, low_contrast_offset, pw, ph, dftwaves, dftgrids);
+      if(ret) continue;
+
+      ret = dft_power_stats(wis_local, powmaxs_local, powmax_dirs_local, pownorms_local,
+                           powers_local, 1, dftwaves->nwaves, dftgrids->ngrids);
+      if(ret) continue;
+
+      int blkdir = primary_dir_test(powers_local, wis_local, powmaxs_local, powmax_dirs_local,
+                                    pownorms_local, nstats, lfsparms);
+
+      if(blkdir != INVALID_DIR) direction_map[bi] = blkdir;
       else {
-         print2log("\n");
+         blkdir = secondary_fork_test(powers_local, wis_local, powmaxs_local, powmax_dirs_local,
+                                       pownorms_local, nstats, lfsparms);
+         if(blkdir != INVALID_DIR) direction_map[bi] = blkdir;
+         else low_flow_map[bi] = TRUE;
+      }
+   }
+cleanup_perthread:
+   for(t = 0; t < nthreads; ++t){
+       if(powers_thr[t]) free_dir_powers(powers_thr[t], dftwaves->nwaves);
+       if(wis_thr[t]) free(wis_thr[t]);
+       if(powmaxs_thr[t]) free(powmaxs_thr[t]);
+       if(powmax_dirs_thr[t]) free(powmax_dirs_thr[t]);
+       if(pownorms_thr[t]) free(pownorms_thr[t]);
+   }
+   free(powers_thr);
+   free(wis_thr);
+   free(powmaxs_thr);
+   free(powmax_dirs_thr);
+   free(pownorms_thr);
 
-         /* Compute DFT powers */
-         if((ret = dft_dir_powers(powers, pdata, low_contrast_offset, pw, ph,
-                               dftwaves, dftgrids))){
-            /* Free memory allocated to this point. */
-            free(direction_map);
-            free(low_contrast_map);
-            free(low_flow_map);
-            free_dir_powers(powers, dftwaves->nwaves);
-            free(wis);
-            free(powmaxs);
-            free(powmax_dirs);
-            free(pownorms);
-            return(ret);
-         }
-
-         /* Compute DFT power statistics, skipping first applied DFT  */
-         /* wave.  This is dependent on how the primary and secondary */
-         /* direction tests work below.                               */
-         if((ret = dft_power_stats(wis, powmaxs, powmax_dirs, pownorms, powers,
-                                1, dftwaves->nwaves, dftgrids->ngrids))){
-            /* Free memory allocated to this point. */
-            free(direction_map);
-            free(low_contrast_map);
-            free(low_flow_map);
-            free_dir_powers(powers, dftwaves->nwaves);
-            free(wis);
-            free(powmaxs);
-            free(powmax_dirs);
-            free(pownorms);
-            return(ret);
-         }
-
-#ifdef LOG_REPORT /*vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*/
-         {  int _w;
-            fprintf(logfp, "      Power\n");
-            for(_w = 0; _w < nstats; _w++){
-               /* Add 1 to wis[w] to create index to original dft_coefs[] */
-               fprintf(logfp, "         wis[%d] %d %12.3f %2d %9.3f %12.3f\n",
-                    _w, wis[_w]+1, 
-                    powmaxs[wis[_w]], powmax_dirs[wis[_w]], pownorms[wis[_w]],
-                    powers[0][powmax_dirs[wis[_w]]]);
-            }
-         }
-#endif /*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*/
-
-         /* Conduct primary direction test */
-         blkdir = primary_dir_test(powers, wis, powmaxs, powmax_dirs,
-                                  pownorms, nstats, lfsparms);
-
-         if(blkdir != INVALID_DIR)
-            direction_map[bi] = blkdir;
-         else{
-            /* Conduct secondary (fork) direction test */
-            blkdir = secondary_fork_test(powers, wis, powmaxs, powmax_dirs,
-                                  pownorms, nstats, lfsparms);
-            if(blkdir != INVALID_DIR)
-               direction_map[bi] = blkdir;
-            /* Otherwise current direction in Direction Map remains INVALID */
-            else
-               /* Flag the block as having LOW RIDGE FLOW. */
-               low_flow_map[bi] = TRUE;
-         }
-
-      } /* End DFT */
-   } /* bi */
-
-   /* Deallocate working memory */
-   free_dir_powers(powers, dftwaves->nwaves);
-   free(wis);
-   free(powmaxs);
-   free(powmax_dirs);
-   free(pownorms);
+cleanup_maps:
+   if(ret) {
+       free(direction_map); free(low_contrast_map); free(low_flow_map);
+       return ret;
+   }
 
    *odmap = direction_map;
    *olcmap = low_contrast_map;
    *olfmap = low_flow_map;
-   return(0);
+   return 0;
 }
 
 /*************************************************************************
