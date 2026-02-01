@@ -243,78 +243,60 @@ int pad_uchar_image(unsigned char **optr, int *ow, int *oh,
    Output:
       bdata - points to the results
 **************************************************************************/
+#include <omp.h>
+
 void fill_holes(unsigned char *bdata, const int iw, const int ih)
 {
-   int ix, iy, iw2;
-   unsigned char *lptr, *mptr, *rptr, *tptr, *bptr, *sptr;
+    int ix, iy;
+    unsigned char *lptr, *mptr, *rptr;
+    unsigned char *tptr, *bptr;
+    unsigned char *sptr;
 
-   /* 1. Fill 1-pixel wide holes in horizontal runs first ... */
-   sptr = bdata + 1;
-   /* Foreach row in image ... */
-   for(iy = 0; iy < ih; iy++){
-      /* Initialize pointers to start of next line ... */
-      lptr = sptr-1;   /* Left pixel   */
-      mptr = sptr;     /* Middle pixel */
-      rptr = sptr+1;   /* Right pixel  */
-      /* Foreach column in image (less far left and right pixels) ... */
-      for(ix = 1; ix < iw-1; ix++){
-         /* Do we have a horizontal hole of length 1? */
-         if((*lptr != *mptr) && (*lptr == *rptr)){
-            /* If so, then fill it. */
-            *mptr = *lptr;
-            /* Bump passed right pixel because we know it will not */
-            /* be a hole.                                          */
-            lptr+=2;
-            mptr+=2;
-            rptr+=2;
-            /* We bump ix once here and then the FOR bumps it again. */
-            ix++;
-         }
-         else{
-            /* Otherwise, bump to the next pixel to the right. */
-            lptr++;
-            mptr++;
-            rptr++;
-         }
-      }
-      /* Bump to start of next row. */
-      sptr += iw;
-   }
+#pragma omp parallel for private(ix, lptr, mptr, rptr, sptr)
+    for(iy = 0; iy < ih; iy++){
+        sptr = bdata + iy * iw + 1;
 
-   /* 2. Now, fill 1-pixel wide holes in vertical runs ... */
-   iw2 = iw<<1;
-   /* Start processing column one row down from the top of the image. */
-   sptr = bdata + iw;
-   /* Foreach column in image ... */
-   for(ix = 0; ix < iw; ix++){
-      /* Initialize pointers to start of next column ... */
-      tptr = sptr-iw;   /* Top pixel     */
-      mptr = sptr;      /* Middle pixel  */
-      bptr = sptr+iw;   /* Bottom pixel  */
-      /* Foreach row in image (less top and bottom row) ... */
-      for(iy = 1; iy < ih-1; iy++){
-         /* Do we have a vertical hole of length 1? */
-         if((*tptr != *mptr) && (*tptr == *bptr)){
-            /* If so, then fill it. */
-            *mptr = *tptr;
-            /* Bump passed bottom pixel because we know it will not */
-            /* be a hole.                                           */
-            tptr+=iw2;
-            mptr+=iw2;
-            bptr+=iw2;
-            /* We bump iy once here and then the FOR bumps it again. */
-            iy++;
-         }
-         else{
-            /* Otherwise, bump to the next pixel below. */
-            tptr+=iw;
-            mptr+=iw;
-            bptr+=iw;
-         }
-      }
-      /* Bump to start of next column. */
-      sptr++;
-   }
+        lptr = sptr - 1;
+        mptr = sptr;
+        rptr = sptr + 1;
+
+        for(ix = 1; ix < iw - 1; ix++){
+            if((*lptr != *mptr) && (*lptr == *rptr)){
+                *mptr = *lptr;
+                lptr += 2;
+                mptr += 2;
+                rptr += 2;
+                ix++;
+            } else {
+                lptr++;
+                mptr++;
+                rptr++;
+            }
+        }
+    }
+
+#pragma omp parallel for private(iy, tptr, mptr, bptr, sptr)
+    for(ix = 0; ix < iw; ix++){
+        sptr = bdata + iw + ix;
+
+        tptr = sptr - iw;
+        mptr = sptr;
+        bptr = sptr + iw;
+
+        for(iy = 1; iy < ih - 1; iy++){
+            if((*tptr != *mptr) && (*tptr == *bptr)){
+                *mptr = *tptr;
+                tptr += 2 * iw;
+                mptr += 2 * iw;
+                bptr += 2 * iw;
+                iy++;
+            } else {
+                tptr += iw;
+                mptr += iw;
+                bptr += iw;
+            }
+        }
+    }
 }
 
 /*************************************************************************

@@ -284,58 +284,61 @@ int binarize_image(unsigned char **optr, int *ow, int *oh,
       Zero     - successful completion
       Negative - system error
 **************************************************************************/
+#include <omp.h>
+
 int binarize_image_V2(unsigned char **odata, int *ow, int *oh,
                    unsigned char *pdata, const int pw, const int ph,
                    const int *direction_map, const int mw, const int mh,
                    const int blocksize, const ROTGRIDS *dirbingrids)
 {
-   int ix, iy, bw, bh, bx, by, mapval;
-   unsigned char *bdata, *bptr;
-   unsigned char *pptr, *spptr;
+    int ix, iy, bw, bh;
 
-   /* Compute dimensions of "unpadded" binary image results. */
-   bw = pw - (dirbingrids->pad<<1);
-   bh = ph - (dirbingrids->pad<<1);
+    bw = pw - (dirbingrids->pad << 1);
+    bh = ph - (dirbingrids->pad << 1);
 
-   bdata = (unsigned char *)malloc(bw*bh*sizeof(unsigned char));
-   if(bdata == (unsigned char *)NULL){
-      fprintf(stderr, "ERROR : binarize_image_V2 : malloc : bdata\n");
-      return(-600);
-   }
+    unsigned char *bdata = (unsigned char *)malloc(bw * bh);
+    if(!bdata){
+        fprintf(stderr, "ERROR : binarize_image_V2 : malloc : bdata\n");
+        return -600;
+    }
 
-   bptr = bdata;
-   spptr = pdata + (dirbingrids->pad * pw) + dirbingrids->pad;
-   for(iy = 0; iy < bh; iy++){
-      /* Set pixel pointer to start of next row in grid. */
-      pptr = spptr;
-      for(ix = 0; ix < bw; ix++){
+    int blocks_per_row = mw;
+    int pad = dirbingrids->pad;
 
-         /* Compute which block the current pixel is in. */
-         bx = (int)(ix/blocksize);
-         by = (int)(iy/blocksize);
-         /* Get corresponding value in Direction Map. */
-         mapval = *(direction_map + (by*mw) + bx);
-         /* If current block has has INVALID direction ... */
-         if(mapval == INVALID_DIR)
-            /* Set binary pixel to white (255). */
-            *bptr = WHITE_PIXEL;
-         /* Otherwise, if block has a valid direction ... */
-         else /*if(mapval >= 0)*/
-            /* Use directional binarization based on block's direction. */
-            *bptr = dirbinarize(pptr, mapval, dirbingrids);
+    #pragma omp parallel for private(ix) schedule(static)
+    for(iy = 0; iy < bh; iy++){
+        unsigned char *bptr =
+            bdata + iy * bw;
 
-         /* Bump input and output pixel pointers. */
-         pptr++;
-         bptr++;
-      }
-      /* Bump pointer to the next row in padded input image. */
-      spptr += pw;
-   }
+        unsigned char *pptr =
+            pdata + (iy + pad) * pw + pad;
 
-   *odata = bdata;
-   *ow = bw;
-   *oh = bh;
-   return(0);
+        int by = iy / blocksize;
+        const int *dir_row = direction_map + by * blocks_per_row;
+
+        int bx = 0;
+        int block_end = blocksize;
+        int mapval = dir_row[0];
+
+        for(ix = 0; ix < bw; ix++){
+
+            if(ix == block_end){
+                bx++;
+                block_end += blocksize;
+                mapval = dir_row[bx];
+            }
+
+            if(mapval == INVALID_DIR)
+                bptr[ix] = WHITE_PIXEL;
+            else
+                bptr[ix] = dirbinarize(pptr + ix, mapval, dirbingrids);
+        }
+    }
+
+    *odata = bdata;
+    *ow = bw;
+    *oh = bh;
+    return 0;
 }
 
 /*************************************************************************
@@ -359,50 +362,28 @@ int binarize_image_V2(unsigned char **odata, int *ow, int *oh,
 int dirbinarize(const unsigned char *pptr, const int idir,
                 const ROTGRIDS *dirbingrids)
 {
-   int gx, gy, gi, cy;
-   int rsum, gsum, csum = 0;
-   int *grid;
-   double dcy;
+    int gx, gy, gi;
+    int rsum, gsum = 0, csum = 0;
+    int *grid = dirbingrids->grids[idir];
 
-   /* Assign nickname pointer. */
-   grid = dirbingrids->grids[idir];
-   /* Calculate center (0-oriented) row in grid. */
-   dcy = (dirbingrids->grid_h-1)/(double)2.0;
-   /* Need to truncate precision so that answers are consistent */
-   /* on different computer architectures when rounding doubles. */
-   dcy = trunc_dbl_precision(dcy, TRUNC_SCALE);
-   cy = sround(dcy);
-   /* Initialize grid's pixel offset index to zero. */
-   gi = 0;
-   /* Initialize grid's pixel accumulator to zero */
-   gsum = 0;
+    int cy = (dirbingrids->grid_h - 1) >> 1;
 
-   /* Foreach row in grid ... */
-   for(gy = 0; gy < dirbingrids->grid_h; gy++){
-      /* Initialize row pixel sum to zero. */
-      rsum = 0;
-      /* Foreach column in grid ... */
-      for(gx = 0; gx < dirbingrids->grid_w; gx++){
-         /* Accumulate next pixel along rotated row in grid. */
-         rsum += *(pptr+grid[gi]);
-         /* Bump grid's pixel offset index. */
-         gi++;
-      }
-      /* Accumulate row sum into grid pixel sum. */
-      gsum += rsum;
-      /* If current row is center row, then save row sum separately. */
-      if(gy == cy)
-         csum = rsum;
-   }
+    gi = 0;
 
-   /* If the center row sum treated as an average is less than the */
-   /* total pixel sum in the rotated grid ...                      */
-   if((csum * dirbingrids->grid_h) < gsum)
-      /* Set the binary pixel to BLACK. */
-      return(BLACK_PIXEL);
-   else
-      /* Otherwise set the binary pixel to WHITE. */
-      return(WHITE_PIXEL);
+    for(gy = 0; gy < dirbingrids->grid_h; gy++){
+        rsum = 0;
+        for(gx = 0; gx < dirbingrids->grid_w; gx++){
+            rsum += pptr[ grid[gi++] ];
+        }
+        gsum += rsum;
+        if(gy == cy)
+            csum = rsum;
+    }
+
+    if((csum * dirbingrids->grid_h) < gsum)
+        return BLACK_PIXEL;
+    else
+        return WHITE_PIXEL;
 }
 
 /*************************************************************************
