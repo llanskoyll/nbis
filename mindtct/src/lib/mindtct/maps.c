@@ -638,48 +638,48 @@ int morph_TF_map(int *tfmap, const int mw, const int mh,
       Negative - system error
 **************************************************************************/
 int pixelize_map(int **omap, const int iw, const int ih,
-                  int *imap, const int mw, const int mh, const int blocksize)
+                 int *imap, const int mw, const int mh,
+                 const int blocksize)
 {
-   int *pmap;
-   int ret, x, y;
-   int *blkoffs, bw, bh, bi;
-   int *spptr, *pptr;
+    int *pmap = (int *)malloc(iw * ih * sizeof(int));
+    int *blkoffs = NULL;
+    int bw, bh;
+    if (!pmap) {
+        fprintf(stderr, "ERROR : pixelize_map : malloc\n");
+        return -590;
+    }
 
-   pmap = (int *)malloc(iw*ih*sizeof(int));
-   if(pmap == (int *)NULL){
-      fprintf(stderr, "ERROR : pixelize_map : malloc : pmap\n");
-      return(-590);
-   }
+    int ret = block_offsets(&blkoffs, &bw, &bh, iw, ih, 0, blocksize);
+    if (ret) {
+        free(pmap);
+        return ret;
+    }
 
-   if((ret = block_offsets(&blkoffs, &bw, &bh, iw, ih, 0, blocksize))){
-      return(ret);
-   }
+    if (bw != mw || bh != mh) {
+        free(pmap);
+        free(blkoffs);
+        fprintf(stderr, "ERROR : pixelize_map : block dimensions do not match\n");
+        return -591;
+    }
 
-   if((bw != mw) || (bh != mh)){
-      free(blkoffs);
-      fprintf(stderr,
-         "ERROR : pixelize_map : block dimensions do not match\n");
-      return(-591);
-   }
+    int bi;
+    #pragma omp parallel for private(bi)
+    for (bi = 0; bi < mw*mh; bi++) {
+        int *spptr = pmap + blkoffs[bi];
+        int y;
+        for (y = 0; y < blocksize; y++) {
+            int *pptr = spptr;
+            int x;
+            for (x = 0; x < blocksize; x++) {
+                *pptr++ = imap[bi];
+            }
+            spptr += iw;
+        }
+    }
 
-   for(bi = 0; bi < mw*mh; bi++){
-      spptr = pmap + blkoffs[bi];
-      for(y = 0; y < blocksize; y++){
-         pptr = spptr;
-         for(x = 0; x < blocksize; x++){
-            *pptr++ = imap[bi];
-         }
-         spptr += iw;
-      }
-   }
-
-   /* Deallocate working memory. */
-   free(blkoffs);
-   /* Assign pixelized map to output pointer. */
-   *omap = pmap;
-
-   /* Return normally. */
-   return(0);
+    free(blkoffs);
+    *omap = pmap;
+    return 0;
 }
 
 /*************************************************************************
