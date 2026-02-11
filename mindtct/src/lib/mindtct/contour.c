@@ -665,42 +665,30 @@ int trace_contour(int **ocontour_x, int **ocontour_y,
    int next_x_edge, next_y_edge;
    int i, ret;
 
-   /* Check to make sure that the feature and edge values are opposite. */
    if(*(bdata+(y_loc*iw)+x_loc) ==
       *(bdata+(y_edge*iw)+x_edge))
-      /* If not opposite, then the trace will not work, so return IGNORE. */
       return(IGNORE);
 
-   /* Allocate contour buffers. */
    if((ret = allocate_contour(&contour_x, &contour_y,
                      &contour_ex, &contour_ey, max_len))){
-      /* If allocation error, return code. */
       return(ret);
    }
 
-   /* Set pixel counter to 0. */
    ncontour = 0;
 
-   /* Set up for finding first contour pixel. */
    cur_x_loc = x_loc;
    cur_y_loc = y_loc;
    cur_x_edge = x_edge;
    cur_y_edge = y_edge;
 
-   /* Foreach pixel to be collected on the feature's contour... */
    for(i = 0; i < max_len; i++){
-      /* Find the next contour pixel. */
       if(next_contour_pixel(&next_x_loc, &next_y_loc,
                             &next_x_edge, &next_y_edge,
                             cur_x_loc, cur_y_loc,
                             cur_x_edge, cur_y_edge,
                             scan_clock, bdata, iw, ih)){
 
-         /* If we trace back around to the specified starting */
-         /* feature location...                               */
          if((next_x_loc == x_loop) && (next_y_loc == y_loop)){
-            /* Then we have found a loop, so return what we */
-            /* have traced to this point.                   */
             *ocontour_x = contour_x;
             *ocontour_y = contour_y;
             *ocontour_ex = contour_ex;
@@ -709,46 +697,33 @@ int trace_contour(int **ocontour_x, int **ocontour_y,
             return(LOOP_FOUND);
          }
 
-         /* Otherwise, we found another point on our feature's contour, */
-         /* so store the new contour point.                             */
          contour_x[i] = next_x_loc;
          contour_y[i] = next_y_loc;
          contour_ex[i] = next_x_edge;
          contour_ey[i] = next_y_edge;
-         /* Bump the number of points stored. */
          ncontour++;
 
-         /* Set up for finding next contour pixel. */
          cur_x_loc = next_x_loc;
          cur_y_loc = next_y_loc;
          cur_x_edge = next_x_edge;
          cur_y_edge = next_y_edge;
       }
-      /* Otherwise, no new contour point found ... */
       else{
-         /* So, stop short and return the number of pixels found */
-         /* on the contour to this point.                        */
          *ocontour_x = contour_x;
          *ocontour_y = contour_y;
          *ocontour_ex = contour_ex;
          *ocontour_ey = contour_ey;
          *oncontour = ncontour;
-
-         /* Return normally. */
          return(0);
       }
    }
 
-   /* If we get here, we successfully found the maximum points we    */
-   /* were looking for on the feature contour, so assign the contour */
-   /* buffers to the output pointers and return.                     */
    *ocontour_x = contour_x;
    *ocontour_y = contour_y;
    *ocontour_ex = contour_ex;
    *ocontour_ey = contour_ey;
    *oncontour = ncontour;
 
-   /* Return normally. */
    return(0);
 }
 
@@ -886,115 +861,68 @@ int next_contour_pixel(int *next_x_loc, int *next_y_loc,
    int ni, nx, ny, npix;
    int nbr_i, i;
 
-   /* Get the feature's pixel value. */
    feature_pix = *(bdata + (cur_y_loc * iw) + cur_x_loc);
-   /* Get the feature's edge pixel value. */
    edge_pix = *(bdata + (cur_y_edge * iw) + cur_x_edge);
 
-   /* Get the nieghbor position of the feature's edge pixel in relationship */
-   /* to the feature's actual position.                                     */
-   /* REMEBER: The feature's position is always interior and on a ridge     */
-   /* ending (black pixel) or (for bifurcations) on a valley ending (white  */
-   /* pixel).  The feature's edge pixel is an adjacent pixel to the feature */
-   /* pixel that is exterior to the ridge or valley ending and opposite in  */
-   /* pixel value.                                                          */
    nbr_i = start_scan_nbr(cur_x_loc, cur_y_loc, cur_x_edge, cur_y_edge);
 
-   /* Set current neighbor scan pixel to the feature's edge pixel. */
    cur_nbr_x = cur_x_edge;
    cur_nbr_y = cur_y_edge;
    cur_nbr_pix = edge_pix;
 
-   /* Foreach pixel neighboring the feature pixel ... */
    for(i = 0; i < 8; i++){
 
-      /* Set current neighbor scan pixel to previous scan pixel. */
       prev_nbr_x = cur_nbr_x;
       prev_nbr_y = cur_nbr_y;
       prev_nbr_pix = cur_nbr_pix;
 
-      /* Bump pixel neighbor index clockwise or counter-clockwise. */
       nbr_i = next_scan_nbr(nbr_i, scan_clock);
 
-      /* Set current scan pixel to the new neighbor.                   */
-      /* REMEMBER: the neighbors are being scanned around the original */
-      /* feature point.                                                */
       cur_nbr_x = cur_x_loc + nbr8_dx[nbr_i];
       cur_nbr_y = cur_y_loc + nbr8_dy[nbr_i];
 
-      /* If new neighbor is not within image boundaries... */
       if((cur_nbr_x < 0) || (cur_nbr_x >= iw) ||
          (cur_nbr_y < 0) || (cur_nbr_y >= ih))
-         /* Return (FALSE==>Failure) if neighbor out of bounds. */
          return(FALSE);
 
-      /* Get the new neighbor's pixel value. */
       cur_nbr_pix = *(bdata + (cur_nbr_y * iw) + cur_nbr_x);
 
-      /* If the new neighbor's pixel value is the same as the feature's   */
-      /* pixel value AND the previous neighbor's pixel value is the same  */
-      /* as the features's edge, then we have "likely" found our next     */
-      /* contour pixel.                                                   */
       if((cur_nbr_pix == feature_pix) && (prev_nbr_pix == edge_pix)){
 
-         /* Check to see if current neighbor is on the corner of the */
-         /* neighborhood, and if so, test to see if it is "exposed". */
-         /* The neighborhood corners have odd neighbor indicies.     */
          if(nbr_i % 2){
-            /* To do this, look ahead one more neighbor pixel. */
             ni = next_scan_nbr(nbr_i, scan_clock);
             nx = cur_x_loc + nbr8_dx[ni];
             ny = cur_y_loc + nbr8_dy[ni];
-            /* If new neighbor is not within image boundaries... */
             if((nx < 0) || (nx >= iw) ||
                (ny < 0) || (ny >= ih))
-               /* Return (FALSE==>Failure) if neighbor out of bounds. */
                return(FALSE);
             npix = *(bdata + (ny * iw) + nx);
 
-            /* If the next neighbor's value is also the same as the */
-            /* feature's pixel, then corner is NOT exposed...       */
             if(npix == feature_pix){
-               /* Assign the current neighbor pair to the output pointers. */
                *next_x_loc = cur_nbr_x;
                *next_y_loc = cur_nbr_y;
                *next_x_edge = prev_nbr_x;
                *next_y_edge = prev_nbr_y;
-               /* Return TRUE==>Success. */
                return(TRUE);
             }
-            /* Otherwise, corner pixel is "exposed" so skip it. */
             else{
-               /* Skip current corner neighbor by resetting it to the      */
-               /* next neighbor, which upon the iteration will immediately */
-               /* become the previous neighbor.                            */
                cur_nbr_x = nx;
                cur_nbr_y = ny;
                cur_nbr_pix = npix;
-               /* Advance neighbor index. */
                nbr_i = ni;
-               /* Advance neighbor count. */
                i++;
             }
          }
-         /* Otherwise, current neighbor is not a corner ... */
          else{
-            /* Assign the current neighbor pair to the output pointers. */
             *next_x_loc = cur_nbr_x;
             *next_y_loc = cur_nbr_y;
             *next_x_edge = prev_nbr_x;
             *next_y_edge = prev_nbr_y;
-            /* Return TRUE==>Success. */
             return(TRUE);
          }
       }
    }
 
-   /* If we get here, then we did not find the next contour pixel */
-   /* within the 8 neighbors of the current feature pixel so      */
-   /* return (FALSE==>Failure).                                   */
-   /* NOTE: This must mean we found a single isolated pixel.      */
-   /*       Perhaps this should be filled?                        */
    return(FALSE);
 }
 

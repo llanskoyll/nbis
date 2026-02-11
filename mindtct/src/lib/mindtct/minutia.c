@@ -614,52 +614,42 @@ int update_minutiae_V2(MINUTIAE *minutiae, MINUTIA *minutia,
 **************************************************************************/
 int sort_minutiae_y_x(MINUTIAE *minutiae, const int iw, const int ih)
 {
-   int *ranks, *order;
-   int i, ret;
-   MINUTIA **newlist;
+    if(minutiae->num < 2) return 0;
 
-   /* Allocate a list of integers to hold 1-D image pixel offsets */
-   /* for each of the 2-D minutia coordinate points.               */
-   ranks = (int *)malloc(minutiae->num * sizeof(int));
-   if(ranks == (int *)NULL){
-      fprintf(stderr, "ERROR : sort_minutiae_y_x : malloc : ranks\n");
-      return(-310);
-   }
+    MINUTIA **arr = minutiae->list;
+    MINUTIA **tmp = (MINUTIA **)malloc(minutiae->num * sizeof(MINUTIA *));
+    if(tmp == NULL){
+        fprintf(stderr, "ERROR : sort_minutiae_y_x : malloc : tmp\n");
+        return -312;
+    }
 
-   /* Compute 1-D image pixel offsets form 2-D minutia coordinate points. */
-   for(i = 0; i < minutiae->num; i++)
-      ranks[i] = (minutiae->list[i]->y * iw) + minutiae->list[i]->x;
+    int width = minutiae->num;
+    int sz;
+    for(sz = 1; sz < width; sz *= 2) {
+         int left;
+        for(left = 0; left < width; left += 2*sz) {
+            int mid = left + sz;
+            int right = left + 2*sz;
+            if(mid > width) mid = width;
+            if(right > width) right = width;
 
-   /* Get sorted order of minutiae. */
-   if((ret = sort_indices_int_inc(&order, ranks, minutiae->num))){
-      free(ranks);
-      return(ret);
-   }
+            int i = left, j = mid, k = left;
+            while(i < mid && j < right) {
+                if(arr[i]->y < arr[j]->y || (arr[i]->y == arr[j]->y && arr[i]->x <= arr[j]->x))
+                    tmp[k++] = arr[i++];
+                else
+                    tmp[k++] = arr[j++];
+            }
+            while(i < mid) tmp[k++] = arr[i++];
+            while(j < right) tmp[k++] = arr[j++];
 
-   /* Allocate new MINUTIA list to hold sorted minutiae. */
-   newlist = (MINUTIA **)malloc(minutiae->num * sizeof(MINUTIA *));
-   if(newlist == (MINUTIA **)NULL){
-      free(ranks);
-      free(order);
-      fprintf(stderr, "ERROR : sort_minutiae_y_x : malloc : newlist\n");
-      return(-311);
-   }
+            for(i = left; i < right; i++)
+                arr[i] = tmp[i];
+        }
+    }
 
-   /* Put minutia into sorted order in new list. */
-   for(i = 0; i < minutiae->num; i++)
-      newlist[i] = minutiae->list[order[i]];
-
-   /* Deallocate non-sorted list of minutia pointers. */
-   free(minutiae->list);
-   /* Assign new sorted list of minutia to minutiae list. */
-   minutiae->list = newlist;
-
-   /* Free the working memories supporting the sort. */
-   free(order);
-   free(ranks);
-
-   /* Return normally. */
-   return(0);
+    free(tmp);
+    return 0;
 }
 
 /*************************************************************************
@@ -967,13 +957,11 @@ void free_minutiae(MINUTIAE *minutiae)
 *************************************************************************/
 void free_minutia(MINUTIA *minutia)
 {
-   /* Deallocate sublists. */
    if(minutia->nbrs != (int *)NULL)
       free(minutia->nbrs);
    if(minutia->ridge_counts != (int *)NULL)
       free(minutia->ridge_counts);
 
-   /* Deallocate the minutia structure. */
    free(minutia);
 }
 
@@ -995,24 +983,18 @@ int remove_minutia(const int index, MINUTIAE *minutiae)
 {
    int fr, to;
 
-   /* Make sure the requested index is within range. */
    if((index < 0) && (index >= minutiae->num)){
       fprintf(stderr, "ERROR : remove_minutia : index out of range\n");
       return(-380);
    }
 
-   /* Deallocate the minutia structure to be removed. */
    free_minutia(minutiae->list[index]);
 
-   /* Slide the remaining list of minutiae up over top of the */
-   /* position of the minutia being removed.                 */
    for(to = index, fr = index+1; fr < minutiae->num; to++, fr++)
       minutiae->list[to] = minutiae->list[fr];
 
-   /* Decrement the number of minutiae remaining in the list. */
    minutiae->num--;
 
-   /* Return normally. */
    return(0);
 }
 

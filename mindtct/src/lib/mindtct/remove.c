@@ -265,49 +265,28 @@ int remove_holes(MINUTIAE *minutiae,
    int i, ret;
    MINUTIA *minutia;
 
-   print2log("\nREMOVING HOLES:\n");
-
    i = 0;
-   /* Foreach minutia remaining in list ... */
    while(i < minutiae->num){
-      /* Assign a temporary pointer. */
       minutia = minutiae->list[i];
-      /* If current minutia is a bifurcation ... */
       if(minutia->type == BIFURCATION){
-         /* Check to see if it is on a loop of specified length (ex. 15). */
          ret = on_loop(minutia, lfsparms->small_loop_len, bdata, iw, ih);
-         /* If minutia is on a loop ... or loop test IGNORED */
          if((ret == LOOP_FOUND) || (ret == IGNORE)){
-
-            print2log("%d,%d RM\n", minutia->x, minutia->y);
-
-            /* Then remove the minutia from list. */
             if((ret = remove_minutia(i, minutiae))){
-               /* Return error code. */
                return(ret);
             }
-            /* No need to advance because next minutia has "slid" */
-            /* into position pointed to by 'i'.                   */
          }
-         /* If the minutia is NOT on a loop... */
          else if (ret == FALSE){
-            /* Simply advance to next minutia in the list. */
             i++;
          }
-         /* Otherwise, an ERROR occurred while looking for loop. */
          else{
-            /* Return error code. */
             return(ret);
          }
       }
-      /* Otherwise, the current minutia is a ridge-ending... */
       else{
-         /* Advance to next minutia in the list. */
          i++;
       }
    }
 
-   /* Return normally. */
    return(0);
 }
 
@@ -857,218 +836,128 @@ int remove_islands_and_lakes(MINUTIAE *minutiae,
    int delta_y, full_ndirs, qtr_ndirs, deltadir, min_deltadir;
    int *loop_x, *loop_y, *loop_ex, *loop_ey, nloop;
    MINUTIA *minutia1, *minutia2;
-   double dist;
    int dist_thresh, half_loop;
-
-   print2log("\nREMOVING ISLANDS AND LAKES:\n");
+   int dist_thresh2;
+   int *linpos;
 
    dist_thresh = lfsparms->max_rmtest_dist;
+   dist_thresh2 = dist_thresh * dist_thresh;
    half_loop = lfsparms->max_half_loop;
 
-   /* Allocate list of minutia indices that upon completion of testing */
-   /* should be removed from the minutiae lists.  Note: That using      */
-   /* "calloc" initializes the list to FALSE.                          */
    to_remove = (int *)calloc(minutiae->num, sizeof(int));
-   if(to_remove == (int *)NULL){
-      fprintf(stderr,
-              "ERROR : remove_islands_and_lakes : calloc : to_remove\n");
-      return(-610);
+   if(to_remove == NULL)
+      return -610;
+
+   linpos = (int *)malloc(minutiae->num * sizeof(int));
+   if(linpos == NULL){
+      free(to_remove);
+      return -610;
    }
 
-   /* Compute number directions in full circle. */
-   full_ndirs = lfsparms->num_directions<<1;
-   /* Compute number of directions in 45=(180/4) degrees. */
-   qtr_ndirs = lfsparms->num_directions>>2;
+   for(i = 0; i < minutiae->num; i++)
+      linpos[i] = minutiae->list[i]->y * iw + minutiae->list[i]->x;
 
-   /* Minimum allowable deltadir to consider joining minutia.               */
-   /* (The closer the deltadir is to 180 degrees, the more likely the join. */
-   /* When ndirs==16, then this value is 11=(3*4)-1 == 123.75 degrees.      */
-   /* I chose to parameterize this threshold based on a fixed fraction of   */
-   /* 'ndirs' rather than on passing in a parameter in degrees and doing    */
-   /* the conversion.  I doubt the difference matters.                      */
+   full_ndirs = lfsparms->num_directions << 1;
+   qtr_ndirs = lfsparms->num_directions >> 2;
    min_deltadir = (3 * qtr_ndirs) - 1;
 
-   /* Foreach primary (first) minutia (except for last one in list) ... */
    f = 0;
    while(f < minutiae->num-1){
 
-      /* If current first minutia not previously set to be removed. */
       if(!to_remove[f]){
 
-         print2log("\n");
-
-         /* Set first minutia to temporary pointer. */
          minutia1 = minutiae->list[f];
 
-         /* Foreach secondary minutia to right of first minutia ... */
          s = f+1;
          while(s < minutiae->num){
-            /* Set second minutia to temporary pointer. */
+
             minutia2 = minutiae->list[s];
 
-            /* If the secondary minutia is desired type ... */
             if(minutia2->type == minutia1->type){
 
-               print2log("1:%d(%d,%d)%d 2:%d(%d,%d)%d ",
-                         f, minutia1->x, minutia1->y, minutia1->type,
-                         s, minutia2->x, minutia2->y, minutia2->type);
-
-               /* The binary image is potentially being edited during   */
-               /* each iteration of the secondary minutia loop,         */
-               /* therefore minutia pixel values may be changed.  We    */
-               /* need to catch these events by using the next 2 tests. */
-
-               /* If the first minutia's pixel has been previously */
-               /* changed...                                       */
-               if(*(bdata+(minutia1->y*iw)+minutia1->x) != minutia1->type){
-                  print2log("\n");
-                  /* Then break out of secondary loop and skip to next */
-                  /* first.                                            */
+               if(bdata[linpos[f]] != minutia1->type)
                   break;
-               }
 
-               /* If the second minutia's pixel has been previously */
-               /* changed...                                        */
-               if(*(bdata+(minutia2->y*iw)+minutia2->x) != minutia2->type)
-                  /* Set to remove second minutia. */
+               if(bdata[linpos[s]] != minutia2->type)
                   to_remove[s] = TRUE;
 
-               /* If the second minutia not previously set to be removed. */
                if(!to_remove[s]){
 
-                  /* Compute delta y between 1st & 2nd minutiae and test. */
                   delta_y = minutia2->y - minutia1->y;
-                  /* If delta y small enough (ex. <16 pixels)... */
+
                   if(delta_y <= dist_thresh){
 
-                     print2log("1DY ");
+                     int dx = minutia2->x - minutia1->x;
+                     int dy = minutia2->y - minutia1->y;
+                     int dist2 = dx*dx + dy*dy;
 
-                     /* Compute Euclidean distance between 1st & 2nd */
-                     /* mintuae.                                     */
-                     dist = distance(minutia1->x, minutia1->y,
-                                     minutia2->x, minutia2->y);
+                     if(dist2 <= dist_thresh2){
 
-                     /* If distance is NOT too large (ex. <16 pixels)... */
-                     if(dist <= dist_thresh){
-
-                        print2log("2DS ");
-
-                        /* Compute "inner" difference between directions */
-                        /* on a full circle and test.                    */
-                        if((deltadir = closest_dir_dist(minutia1->direction,
-                                       minutia2->direction, full_ndirs)) ==
-                                       INVALID_DIR){
+                        deltadir = closest_dir_dist(minutia1->direction,
+                                                     minutia2->direction,
+                                                     full_ndirs);
+                        if(deltadir == INVALID_DIR){
+                           free(linpos);
                            free(to_remove);
-                           fprintf(stderr,
-                     "ERROR : remove_islands_and_lakes : INVALID direction\n");
-                           return(-611);
+                           return -611;
                         }
-                        /* If the difference between dirs is large      */
-                        /* enough ...                                   */
-                        /* (the more 1st & 2nd point away from each     */
-                        /* other the more likely they should be joined) */
+
                         if(deltadir > min_deltadir){
 
-                           print2log("3DD ");
-
-                           /* Pair is the same type, so test to see */
-                           /* if both are on an island or lake.     */
-
-                           /* Check to see if pair on a loop of specified */
-                           /* half length (ex. 30 pixels) ...             */
                            ret = on_island_lake(&loop_x, &loop_y,
                                            &loop_ex, &loop_ey, &nloop,
                                            minutia1, minutia2,
                                            half_loop, bdata, iw, ih);
-                           /* If pair is on island/lake ... */
+
                            if(ret == LOOP_FOUND){
 
-                              print2log("4IL RM\n");
-
-                              /* Fill the loop. */
-                              if((ret = fill_loop(loop_x, loop_y, nloop,
-                                                 bdata, iw, ih))){
-                                 free_contour(loop_x, loop_y,
-                                              loop_ex, loop_ey);
+                              ret = fill_loop(loop_x, loop_y, nloop,
+                                              bdata, iw, ih);
+                              free_contour(loop_x, loop_y, loop_ex, loop_ey);
+                              if(ret){
+                                 free(linpos);
                                  free(to_remove);
-                                 return(ret);
+                                 return ret;
                               }
-                              /* Set to remove first minutia. */
+
                               to_remove[f] = TRUE;
-                              /* Set to remove second minutia. */
                               to_remove[s] = TRUE;
-                              /* Deallocate loop contour. */
-                              free_contour(loop_x,loop_y,loop_ex,loop_ey);
                            }
-                           /* If island/lake test IGNORED ... */
-                           else if (ret == IGNORE){
-
-                              print2log("RM\n");
-
-                              /* Set to remove first minutia. */
+                           else if(ret == IGNORE){
                               to_remove[f] = TRUE;
-                              /* Skip to next 1st minutia by breaking out */
-                              /* of inner secondary loop.                 */
                               break;
                            }
-                           /* If ERROR while looking for island/lake ... */
-                           else if (ret < 0){
+                           else if(ret < 0){
+                              free(linpos);
                               free(to_remove);
-                              return(ret);
+                              return ret;
                            }
-                           else
-                              print2log("\n");
-                        }/* End deltadir test. */
-                        else
-                           print2log("\n");
-                     }/* End distance test. */
-                     else
-                        print2log("\n");
+                        }
+                     }
                   }
-                  /* Otherwise, current 2nd too far below 1st, so skip to */
-                  /* next 1st minutia.                                    */
-                  else{
-
-                     print2log("\n");
-
-                     /* Break out of inner secondary loop. */
+                  else
                      break;
-                  }/* End delta-y test. */
-               }/* End if !to_remove[s] */
-               else
-                  print2log("\n");
-
-            }/* End if 2nd not desired type */
-
-            /* Bump to next second minutia in minutiae list. */
+               }
+            }
             s++;
-         }/* End secondary minutiae loop. */
-
-      }/* Otherwise, first minutia already flagged to be removed. */
-
-      /* Bump to next first minutia in minutiae list. */
+         }
+      }
       f++;
-   }/* End primary minutiae loop. */
+   }
 
-   /* Now remove all minutiae in list that have been flagged for removal. */
-   /* NOTE: Need to remove the minutia from their lists in reverse       */
-   /*       order, otherwise, indices will be off.                       */
    for(i = minutiae->num-1; i >= 0; i--){
-      /* If the current minutia index is flagged for removal ... */
       if(to_remove[i]){
-         /* Remove the minutia from the minutiae list. */
          if((ret = remove_minutia(i, minutiae))){
+            free(linpos);
             free(to_remove);
-            return(ret);
+            return ret;
          }
       }
    }
 
-   /* Deallocate flag list. */
+   free(linpos);
    free(to_remove);
-
-   /* Return normally. */
-   return(0);
+   return 0;
 }
 
 /*************************************************************************

@@ -195,32 +195,25 @@ int on_loop(const MINUTIA *minutia, const int max_loop_len,
    int ret;
    int *contour_x, *contour_y, *contour_ex, *contour_ey, ncontour;
 
-   /* Trace the contour of the feature starting at the minutia point  */
-   /* and stepping along up to the specified maximum number of steps. */
    ret = trace_contour(&contour_x, &contour_y,
                        &contour_ex, &contour_ey, &ncontour, max_loop_len,
                        minutia->x, minutia->y, minutia->x, minutia->y,
                        minutia->ex, minutia->ey,
                        SCAN_CLOCKWISE, bdata, iw, ih);
 
-   /* If trace was not possible ... */
    if(ret == IGNORE)
       return(ret);
 
-   /* If the trace completed a loop ... */
    if(ret == LOOP_FOUND){
       free_contour(contour_x, contour_y, contour_ex, contour_ey);
       return(LOOP_FOUND);
    }
 
-   /* If the trace successfully followed the minutia's contour, but did */
-   /* not complete a loop within the specified number of steps ...      */
    if(ret == 0){
       free_contour(contour_x, contour_y, contour_ex, contour_ey);
       return(FALSE);
    }
 
-   /* Otherwise, the trace had an error in following the contour ... */
    return(ret);
 }
 
