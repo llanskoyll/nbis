@@ -90,6 +90,8 @@ of the software.
       Zero     - successful completion
       Negative - system error
 **************************************************************************/
+#include <omp.h>
+
 int count_minutiae_ridges(MINUTIAE *minutiae,
                       unsigned char *bdata, const int iw, const int ih,
                       const LFSPARMS *lfsparms)
@@ -109,13 +111,11 @@ int count_minutiae_ridges(MINUTIAE *minutiae,
       return(ret);
    }
 
-   /* Foreach remaining sorted minutia in list ... */
-   for(i = 0; i < minutiae->num-1; i++){
-      /* Located neighbors and count number of ridges in between. */
-      /* NOTE: neighbor and ridge count results are stored in     */
-      /*       minutiae->list[i].                                 */
-      if((ret = count_minutia_ridges(i, minutiae, bdata, iw, ih, lfsparms))){
-         return(ret);
+   #pragma omp parallel for
+   for (i = 0; i < minutiae->num; i++) {
+      int ret = count_minutia_ridges(i, minutiae, bdata, iw, ih, lfsparms);
+      if (ret < 0) {
+         fprintf(stderr, "Error in minutia %d: %d\n", i, ret);
       }
    }
 
