@@ -215,86 +215,56 @@ int gen_quality_map(int **oqmap, int *direction_map, int *low_contrast_map,
       Zero       - successful completion
       Negative   - system error
 ************************************************************************/
+#include <omp.h>
 int combined_minutia_quality(MINUTIAE *minutiae,
              int *quality_map, const int mw, const int mh, const int blocksize,
              unsigned char *idata, const int iw, const int ih, const int id,
              const double ppmm)
 {
-   int ret, i, index, radius_pix;
-   int *pquality_map, qmap_value;
-   MINUTIA *minutia;
-   double gs_reliability, reliability;
+    int ret, radius_pix, i;
+    int *pquality_map;
 
-   /* If image is not 8-bit grayscale ... */
-   if(id != 8){
-      fprintf(stderr, "ERROR : combined_miutia_quality : ");
-      fprintf(stderr, "image must pixel depth = %d must be 8 ", id);
-      fprintf(stderr, "to compute reliability\n");
-      return(-2);
-   }
+    if(id != 8){
+        fprintf(stderr, "ERROR : combined_minutia_quality : image must be 8-bit\n");
+        return(-2);
+    }
 
-   /* Compute pixel radius of neighborhood based on image's scan resolution. */
-   radius_pix = sround(RADIUS_MM * ppmm);
+    radius_pix = sround(RADIUS_MM * ppmm);
 
-   /* Expand block map values to pixel map. */
-   if((ret = pixelize_map(&pquality_map, iw, ih,
-                         quality_map, mw, mh, blocksize))){
-      return(ret);
-   }
+    if((ret = pixelize_map(&pquality_map, iw, ih, quality_map, mw, mh, blocksize))){
+        return(ret);
+    }
 
-   /* Foreach minutiae detected ... */
-   for(i = 0; i < minutiae->num; i++){
-      /* Assign minutia pointer. */
-      minutia = minutiae->list[i];
+    #pragma omp parallel for private(i)
+    for(i = 0; i < minutiae->num; i++){
+        MINUTIA *minutia = minutiae->list[i];
+        double gs_reliability, reliability;
+        int index, qmap_value;
 
-      /* Compute reliability from stdev and mean of pixel neighborhood. */
-      gs_reliability = grayscale_reliability(minutia,
-                                             idata, iw, ih, radius_pix);
+        gs_reliability = grayscale_reliability(minutia, idata, iw, ih, radius_pix);
 
-      /* Lookup quality map value. */
-      /* Compute minutia pixel index. */
-      index = (minutia->y * iw) + minutia->x;
-      /* Switch on pixel's quality value ... */
-      qmap_value = pquality_map[index];
+        index = minutia->y * iw + minutia->x;
+        qmap_value = pquality_map[index];
 
-      /* Combine grayscale reliability and quality map value. */
-      switch(qmap_value){
-         /* Quality A : [50..99]% */
-         case 4 :
-            reliability = 0.50 + (0.49 * gs_reliability);
-            break;
-         /* Quality B : [25..49]% */
-         case 3 :
-            reliability = 0.25 + (0.24 * gs_reliability);
-            break;
-         /* Quality C : [10..24]% */
-         case 2 :
-            reliability = 0.10 + (0.14 * gs_reliability);
-            break;
-         /* Quality D : [5..9]% */
-         case 1 :
-            reliability = 0.05 + (0.04 * gs_reliability);
-            break;
-         /* Quality E : 1% */
-         case 0 :
-            reliability = 0.01;
-            break;
-         /* Error if quality value not in range [0..4]. */
-         default:
-            fprintf(stderr, "ERROR : combined_miutia_quality : ");
-            fprintf(stderr, "unexpected quality map value %d ", qmap_value);
-            fprintf(stderr, "not in range [0..4]\n");
-            free(pquality_map);
-            return(-3);
-      }
-      minutia->reliability = reliability;
-   }
+        switch(qmap_value){
+            case 4: reliability = 0.50 + (0.49 * gs_reliability); break;
+            case 3: reliability = 0.25 + (0.24 * gs_reliability); break;
+            case 2: reliability = 0.10 + (0.14 * gs_reliability); break;
+            case 1: reliability = 0.05 + (0.04 * gs_reliability); break;
+            case 0: reliability = 0.01; break;
+            default:
+                #pragma omp critical
+                {
+                    fprintf(stderr, "ERROR : unexpected quality map value %d\n", qmap_value);
+                }
+                reliability = 0.0;
+        }
 
-   /* NEW 05-08-2002 */
-   free(pquality_map);
+        minutia->reliability = reliability;
+    }
 
-   /* Return normally. */
-   return(0);
+    free(pquality_map);
+    return(0);
 }
         
 
@@ -360,57 +330,35 @@ void get_neighborhood_stats(double *mean, double *stdev, MINUTIA *minutia,
                      unsigned char *idata, const int iw, const int ih,
                      const int radius_pix)
 {
-   int i, x, y, rows, cols;
-   int n = 0, sumX = 0, sumXX = 0;
-   int histogram[256];
+    int x = minutia->x;
+    int y = minutia->y;
+    int rows, cols;
+    int n = 0;
+    double sum = 0.0;
+    double sumsq = 0.0;
+    unsigned char v;
 
-   /* Zero out histogram. */
-   memset(histogram, 0, 256 * sizeof(int));
+    /* Проверка выхода за границы */
+    if ((x < radius_pix) || (x > iw-radius_pix-1) || 
+        (y < radius_pix) || (y > ih-radius_pix-1)) {
+        *mean = 0.0;
+        *stdev = 0.0;
+        return;
+    }
 
-   /* Set minutia's coordinate variables. */
-   x = minutia->x;
-   y = minutia->y;
+    for(rows = y - radius_pix; rows <= y + radius_pix; rows++){
+        unsigned char *rowptr = idata + rows * iw + (x - radius_pix);
 
+        for(cols = -radius_pix; cols <= radius_pix; cols++){
+            v = *rowptr++;
+            sum += v;
+            sumsq += (double)v * (double)v;
+            n++;
+        }
+    }
 
-   /* If minutiae point is within sampleboxsize distance of image border, */
-   /* a value of 0 reliability is returned. */
-   if ((x < radius_pix) || (x > iw-radius_pix-1) || 
-       (y < radius_pix) || (y > ih-radius_pix-1)) {
-      *mean = 0.0;
-      *stdev = 0.0;
-      return;
-      
-   }
-
-   /* Foreach row in neighborhood ... */
-   for(rows = y - radius_pix;
-       rows <= y + radius_pix;
-       rows++){
-      /* Foreach column in neighborhood ... */
-      for(cols = x - radius_pix;
-          cols <= x + radius_pix;
-          cols++){
-         /* Bump neighbor's pixel value bin in histogram. */
-         histogram[*(idata+(rows * iw)+cols)]++;
-      }
-   }
-
-   /* Foreach grayscale pixel bin ... */
-   for(i = 0; i < 256; i++){
-      if(histogram[i]){
-         /* Accumulate Sum(X[i]) */
-         sumX += (i * histogram[i]);
-         /* Accumulate Sum(X[i]^2) */
-         sumXX += (i * i * histogram[i]);
-         /* Accumulate N samples */
-         n += histogram[i];
-      }
-   }
-
-   /* Mean = Sum(X[i])/N */
-   *mean = sumX/(double)n;
-   /* Stdev = sqrt((Sum(X[i]^2)/N) - Mean^2) */
-   *stdev = sqrt((sumXX/(double)n) - ((*mean)*(*mean)));
+    *mean = sum / (double)n;
+    *stdev = sqrt((sumsq / (double)n) - ((*mean) * (*mean)));
 }
 
 /***********************************************************************
